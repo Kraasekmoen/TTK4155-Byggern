@@ -135,33 +135,54 @@ int main(void)
 	Init_pwm();
 	printf("XMEM Init completed\n");
 	
+	for(int j=0; j<10; j++){
+		testPrint_font(j);	
+	}
+	
+
 	// Initialize OLED screen on USB board
 	oled_init();
+	// OLED Tests
+	address_range_reset();
+	//oled_cmdreg_write(0xa7);	// Inverts display
+	//oled_print_arrow();
 	
-	oled_cmdreg_write(0xa7);	// Inverts display
+	
+
+	// Delay	
 	for(int j=0; j<10; j++)
 	{
 		for(int k=0; k<30000; k++);
 	}
 	
-	while (1)
-	{
-		SRAM_test();
+	while(1){
+		printf("Inverting Display...\n");
+		oled_print_arrow();
+		for(int j=0; j<10; j++)
+		{
+			for(int k=0; k<30000; k++);
+		}
+		printf("Inverting display...\n");
+		oled_print_arrow();
+		for(int j=0; j<10; j++)
+		{
+			for(int k=0; k<30000; k++);
+		}
 	}
-    
 	/*
+	SRAM_test();
+		
 	uint8_t *joy_origins;
-	joy_origins = adc_read();
+	joy_origins = adc_joystick_autocalibrate(10);
 	printf("Sampled average origin (Joy1) = %d \n", joy_origins[0]);
 	printf("Sampled average origin (Joy2) = %d \n", joy_origins[1]);
-	
-	
+		
 	while(1)
 	{
 		uint8_t *sampled_value;
 		sampled_value = adc_read();
-		printf("Sampled value channel 0 (Joy1) = %d \n", adc_formatter(sampled_value[0], 149));
-		printf("Sampled value channel 1 (Joy2) = %d \n", adc_formatter(sampled_value[1], 165));
+		printf("Sampled value channel 0 (Joy1) = %d \n", adc_formatter(sampled_value[0], joy_origins[0]));
+		printf("Sampled value channel 1 (Joy2) = %d \n", adc_formatter(sampled_value[1], joy_origins[1]));
 		printf("Sampled value channel 2 (SliL) = %d \n", (sampled_value[2]));
 		printf("Sampled value channel 3 (SliR) = %d \n", (sampled_value[3]));			// Doesnt seem to work well; only* outputs 00 or FF
 		for(int j=0; j<10; j++)

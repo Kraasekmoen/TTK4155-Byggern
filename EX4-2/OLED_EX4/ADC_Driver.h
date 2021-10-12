@@ -4,15 +4,17 @@
  * Created: 08.10.2021 16:53:48
  *  Author: sindrbov
  */ 
-#include <avr/io.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <avr/interrupt.h>
+
+
 
 #ifndef ADC_DRIVER_H_
 #define ADC_DRIVER_H_
+	#include <avr/io.h>
+	#include <stdio.h>
+	#include <stdint.h>
+	#include <stdbool.h>
+	#include <stdlib.h>
+	#include <avr/interrupt.h>
 
 	uint8_t * adc_read();
 
@@ -20,7 +22,7 @@
 
 	uint8_t array_average(uint8_t *array, uint8_t size);
 
-	uint8_t * adc_joystick_calibrate(uint8_t samples);		// Takes a number of samples from both joysticks and returns pointer to array of averages [Doesnt work]
+	uint8_t * adc_joystick_autocalibrate(uint8_t samples);		// Takes a number of samples from both joysticks and returns pointer to array of averages
 
 	void pos_read (void);
 

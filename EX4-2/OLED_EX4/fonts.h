@@ -7,6 +7,7 @@
 #ifndef FONTS_H_
 #define FONTS_H_
 
+// Fonts have 95 characters, while ascii has 127. Converting: char[font] = char[ascii] - 33 (not 32, because array is 0-indexed)
 
 #include <avr/pgmspace.h>
 
