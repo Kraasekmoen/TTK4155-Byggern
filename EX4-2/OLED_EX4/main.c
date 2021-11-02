@@ -18,6 +18,17 @@
 #include <SPI.h>
 #include <mcp2515.h>
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+(byte & 0x80 ? '1' : '0'), \
+(byte & 0x40 ? '1' : '0'), \
+(byte & 0x20 ? '1' : '0'), \
+(byte & 0x10 ? '1' : '0'), \
+(byte & 0x08 ? '1' : '0'), \
+(byte & 0x04 ? '1' : '0'), \
+(byte & 0x02 ? '1' : '0'), \
+(byte & 0x01 ? '1' : '0')
+
 #define OFFSET 0x1000
 
 #define F_CPU 4915200UL
@@ -115,21 +126,24 @@ uint8_t adc_read(uint8_t channel)
 void SPI_test_1(){
 	uint8_t rec;
 	for (uint8_t a=0; a<10; a++){
-		SPI_send(a);
+		SPI_SS_LOW();
+		SPI_send_byte(a);
 		printf("Sent %d over SPI\n", a);
 		
 		rec = SPI_read();
 		printf("Received %d from SPI slave\n", rec);
+		SPI_SS_HIGH();
 	}
 }
 
-void SPI_test_2(){
+void SPI_READ_STATUS_TEST(){
 	SPI_SS_LOW();
-	SPI_send(MCP_READ_STATUS);
+	printf("Sent READ_STATUS instruction to MCP...\n");
+	SPI_send_byte(MCP_READ_STATUS);
 	uint8_t rec = SPI_read();
-	printf("Immediate receive: %d \n", rec);
-	rec = SPI_read();
-	printf("Second receive: %d \n", rec);
+	printf("Received: "BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(rec));
+	printf("\n");
+	SPI_SS_HIGH();
 }
 
 void SRAM_test(void)
@@ -175,6 +189,7 @@ void delay(int cycles){
 	}
 }
 
+
 int main(void)
 {
 	// Initialize USART transmission drivers, as well as MCU ports and external memory
@@ -186,6 +201,9 @@ int main(void)
 	set_configs();
 	Init_pwm();
 	printf("XMEM Init completed\n");
+	SPI_init();
+	printf("SPI Init completed\n");
+
 	
 	/*
 	// Initialize OLED screen on USB board
@@ -212,15 +230,16 @@ int main(void)
 	SRAM_test();
 	
 	MCP_set_mode_loopback();
-	SPI_test_2();
-	while (1)
+	uint8_t loops = 0;
+	while (loops<8)
 	{
-		SPI_test_1();
+		SPI_READ_STATUS_TEST();
 		// Delay
 		for(int j=0; j<10; j++)
 		{
 			for(int k=0; k<30000; k++);
 		}
+		loops++;
 	}
 		
 	/*

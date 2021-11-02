@@ -156,8 +156,34 @@ Copyright 2003 Kimberly Otten Software Consulting
 
 
 // MCP Driver Functions (appended; S. Øversveen, 2021)
+typedef enum {	TX0		= MCP_RTS_TX0,
+				TX1		= MCP_RTS_TX1,
+				TX2		= MCP_RTS_TX2,
+				TXALL	= MCP_RTS_ALL}transmit_buffer;
+
+typedef enum {	NORMAL		= MODE_NORMAL, 
+				SLEEP		= MODE_SLEEP,
+				LOOPBACK	= MODE_LOOPBACK,
+				LISTENONLY	= MODE_LISTENONLY,
+				CONFIG		= MODE_CONFIG,
+				POWERUP		= MODE_POWERUP,
+				MASK		= MODE_MASK}mcp_mode;
+
 #include <SPI.h>
-void MCP_set_mode_loopback();
+
+//								---									MCP config and operations
+void		MCP_set_mode_loopback();
+void		MCP_bit_modify(uint8_t red_addr, uint8_t mask, uint8_t data);
+void		MCP_reset();
+uint8_t		MCP_read_status();
+
+//								---									MCP SPI interfacing
+uint8_t		MCP_read_byte(uint8_t address);
+void		MCP_write_byte(uint8_t address, uint8_t data);
+void		MCP_write(uint8_t start_address, uint8_t *data);
+
+//								---									MCP CAN control functions
+void		MCP_request_to_send(transmit_buffer bfr);
 
 
 #endif

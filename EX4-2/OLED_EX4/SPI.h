@@ -11,7 +11,8 @@
 	#include <stdlib.h>
 	#include <avr/interrupt.h>
 	
-	void SPI_send(uint8_t ch);
+	void SPI_send_byte(uint8_t ch);
+	void SPI_send(uint8_t *charray);
 	uint8_t SPI_read();
 	void SPI_init();	
 	

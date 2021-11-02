@@ -40,7 +40,7 @@ int8_t adc_formatter(uint8_t reading, uint8_t offset){		// Takes reading from AD
 	return reading_conv = interim;
 }
 
-uint8_t array_average(uint8_t *array, uint8_t size){		// Broken; doesnt work for some reason
+uint8_t array_average(uint8_t *array, uint8_t size){		// 
 	int sum, loop;
 	uint8_t avg;
 	sum = avg = 0;
@@ -56,7 +56,7 @@ uint8_t array_average(uint8_t *array, uint8_t size){		// Broken; doesnt work for
 	return avg;
 }
 
-uint8_t * adc_joystick_autocalibrate(uint8_t samples){		// Takes a number of samples from both joysticks and returns pointer to array of averages [Doesnt work]
+uint8_t * adc_joystick_autocalibrate(uint8_t samples){		// Takes a number of samples from both joysticks and returns pointer to array of averages
 	uint8_t *sampled_value;
 	uint8_t joy1_samples[samples];
 	uint8_t joy2_samples[samples];
