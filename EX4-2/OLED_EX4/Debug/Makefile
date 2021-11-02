@@ -39,7 +39,9 @@ SUBDIRS :=
 C_SRCS +=  \
 ../ADC_Driver.c \
 ../main.c \
+../mcp2512.c \
 ../OLED_Driver.c \
+../SPI.c \
 ../USART_Driver.c
 
 
@@ -52,25 +54,33 @@ ASM_SRCS +=
 OBJS +=  \
 ADC_Driver.o \
 main.o \
+mcp2512.o \
 OLED_Driver.o \
+SPI.o \
 USART_Driver.o
 
 OBJS_AS_ARGS +=  \
 ADC_Driver.o \
 main.o \
+mcp2512.o \
 OLED_Driver.o \
+SPI.o \
 USART_Driver.o
 
 C_DEPS +=  \
 ADC_Driver.d \
 main.d \
+mcp2512.d \
 OLED_Driver.d \
+SPI.d \
 USART_Driver.d
 
 C_DEPS_AS_ARGS +=  \
 ADC_Driver.d \
 main.d \
+mcp2512.d \
 OLED_Driver.d \
+SPI.d \
 USART_Driver.d
 
 OUTPUT_FILE_PATH +=OLED_EX4.elf
@@ -101,7 +111,21 @@ LINKER_SCRIPT_DEP+=
 	@echo Finished building: $<
 	
 
+./mcp2512.o: .././mcp2512.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\include" -I"../.." -I".." -I"U:\Byggern\EX4\OLED_EX4"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega162 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega162" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
 ./OLED_Driver.o: .././OLED_Driver.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\include" -I"../.." -I".." -I"U:\Byggern\EX4\OLED_EX4"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega162 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega162" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+./SPI.o: .././SPI.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\include" -I"../.." -I".." -I"U:\Byggern\EX4\OLED_EX4"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega162 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega162" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

@@ -6,7 +6,11 @@ ADC_Driver.c
 
 main.c
 
+mcp2512.c
+
 OLED_Driver.c
+
+SPI.c
 
 USART_Driver.c
 

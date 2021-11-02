@@ -15,6 +15,8 @@
 #include <OLED_Driver.h>
 #include <USART_Driver.h>
 #include <ADC_Driver.h>
+#include <SPI.h>
+#include <mcp2515.h>
 
 #define OFFSET 0x1000
 
@@ -45,6 +47,12 @@ void xmem_init(void)
 	SFIOR |= (1<<XMM2);
 	DDRC |= 0xFF;
 	PORTC = 0x00;
+}
+
+void set_configs(){
+	SPI_init();				// Enable/initiate Serial Peripheral Interface
+	
+	GICR |= (1 << INT1);	// Enable external interrupts on Pin PD3
 }
 
 
@@ -86,8 +94,43 @@ uint8_t adc_read(uint8_t channel)
 	// RD high, CS high
 }
 */
+	
+	void ADC_test_1(uint8_t *joy_origins){
+		uint8_t *sampled_value;
+		
+		sampled_value = adc_read();
+		printf("Sampled value channel 0 (Joy1) = %d \n", adc_formatter(sampled_value[0], joy_origins[0]));
+		printf("Sampled value channel 1 (Joy2) = %d \n", adc_formatter(sampled_value[1], joy_origins[1]));
+		printf("Sampled value channel 2 (SliL) = %d \n", (sampled_value[2]));
+		printf("Sampled value channel 3 (SliR) = %d \n", (sampled_value[3]));
+		
+		// Delay
+		for(int j=0; j<10; j++)
+		{
+			for(int k=0; k<30000; k++);
+		}
+		printf("Restart from the first channel \n");
+	}
 
+void SPI_test_1(){
+	uint8_t rec;
+	for (uint8_t a=0; a<10; a++){
+		SPI_send(a);
+		printf("Sent %d over SPI\n", a);
+		
+		rec = SPI_read();
+		printf("Received %d from SPI slave\n", rec);
+	}
+}
 
+void SPI_test_2(){
+	SPI_SS_LOW();
+	SPI_send(MCP_READ_STATUS);
+	uint8_t rec = SPI_read();
+	printf("Immediate receive: %d \n", rec);
+	rec = SPI_read();
+	printf("Second receive: %d \n", rec);
+}
 
 void SRAM_test(void)
 {
@@ -124,6 +167,14 @@ void SRAM_test(void)
 	printf("SRAM test completed with \r\n%4d errors in write phase and \r\n%4d errors in retrieval phase\r\n\r\n", write_errors, retrieval_errors);
 }
 
+void delay(int cycles){
+	// Delay
+	for(int j=0; j<10; j++)
+	{
+		for(int k=0; k<cycles; k++);
+	}
+}
+
 int main(void)
 {
 	// Initialize USART transmission drivers, as well as MCU ports and external memory
@@ -132,52 +183,63 @@ int main(void)
 	printf("Program started\n");
 	xmem_init();
 	Init_ports();
+	set_configs();
 	Init_pwm();
 	printf("XMEM Init completed\n");
 	
+	/*
 	// Initialize OLED screen on USB board
 	oled_init();
-	// OLED Tests
-	for(int j=0; j<10; j++){
-		testPrint_font(j);
-	}
+	// || OLED TESTS ||
 		
 	printf("Attempting to clear OLED screen...\n");
+	oled_cmdreg_write(0xa5);
+	
 	oled_reset();
 	// Delay
-	for(int j=0; j<100; j++)
+	for(int j=0; j<10; j++)
 	{
 		for(int k=0; k<30000; k++);
 	}
 	
+	for(int j=0; j<10; j++){
+		testPrint_font(j);
+	}
+	// || --- ||
+	*/
+	
 	// Test SRAM integrity
 	SRAM_test();
-		
-	// Auto-calibrate joystick ADC outputs
-	uint8_t *joy_origins;
-	joy_origins = adc_joystick_autocalibrate(10);
-	printf("Sampled average origin (Joy1) = %d \n", joy_origins[0]);
-	printf("Sampled average origin (Joy2) = %d \n", joy_origins[1]);
 	
-	uint8_t *sampled_value;
-
-	while(1)
+	MCP_set_mode_loopback();
+	SPI_test_2();
+	while (1)
 	{
-		// Read each channel on ADC in sequence (hard-wired mode)
-		sampled_value = adc_read();
-		printf("Sampled value channel 0 (Joy1) = %d \n", adc_formatter(sampled_value[0], joy_origins[0]));
-		printf("Sampled value channel 1 (Joy2) = %d \n", adc_formatter(sampled_value[1], joy_origins[1]));
-		printf("Sampled value channel 2 (SliL) = %d \n", (sampled_value[2]));
-		printf("Sampled value channel 3 (SliR) = %d \n", (sampled_value[3]));
-		
+		SPI_test_1();
 		// Delay
 		for(int j=0; j<10; j++)
 		{
 			for(int k=0; k<30000; k++);
 		}
-		printf("Restart from the first channel \n");
 	}
+		
+	/*
+	// Auto-calibrate joystick ADC outputs
+	uint8_t *joy_origins;
+	joy_origins = adc_joystick_autocalibrate(10);
+	printf("Sampled average origin (Joy1) = %d \n", joy_origins[0]);
+	printf("Sampled average origin (Joy2) = %d \n", joy_origins[1]);
+
 	
+	
+	// Main loop
+	while(1)
+	{
+		// Read each channel on ADC in sequence (hard-wired mode)
+		ADC_test_1(joy_origins);
+		
+	}
+	*/
 }
 
 
