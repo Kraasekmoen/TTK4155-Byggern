@@ -88,7 +88,7 @@ void MCP_write(uint8_t start_address, uint8_t *data){
 
 //								---									MCP CAN control functions
 
-void MCP_request_to_send(transmit_buffer bfr){
+void MCP_request_to_send(unsigned int bfr){
 	SPI_SS_LOW();
 	SPI_send_byte(bfr);
 	SPI_SS_HIGH();

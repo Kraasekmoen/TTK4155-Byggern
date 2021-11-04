@@ -156,10 +156,16 @@ Copyright 2003 Kimberly Otten Software Consulting
 
 
 // MCP Driver Functions (appended; S. Øversveen, 2021)
-typedef enum {	TX0		= MCP_RTS_TX0,
-				TX1		= MCP_RTS_TX1,
-				TX2		= MCP_RTS_TX2,
-				TXALL	= MCP_RTS_ALL}transmit_buffer;
+#define MCP_TXREQ		0x08		// Shape of transmit request pending bit
+#define MCP_TXB0SIDH	0x31		// 0th buffer Standard ID High byte
+#define MCP_TXB0SIDL	0x32		// 0th buffer Standard ID Low byte
+#define MCP_TXB0DLC		0x35		// 0th buffer data length byte
+#define MCP_TXB0D0		0x36		// 0th buffer, Start byte of data address space
+
+#define MCP_RXB0SIDL	0x62
+#define MCP_RXB1SIDL	0x72
+#define MCP_RXB0DLC		0x65
+#define MCP_RXB0D0		0x66
 
 typedef enum {	NORMAL		= MODE_NORMAL, 
 				SLEEP		= MODE_SLEEP,
@@ -183,7 +189,7 @@ void		MCP_write_byte(uint8_t address, uint8_t data);
 void		MCP_write(uint8_t start_address, uint8_t *data);
 
 //								---									MCP CAN control functions
-void		MCP_request_to_send(transmit_buffer bfr);
+void		MCP_request_to_send(unsigned int bfr);
 
 
 #endif

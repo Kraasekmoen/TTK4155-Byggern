@@ -154,6 +154,12 @@
     <Compile Include="ADC_Driver.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="CAN_Driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="CAN_Driver.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="fonts.h">
       <SubType>compile</SubType>
     </Compile>

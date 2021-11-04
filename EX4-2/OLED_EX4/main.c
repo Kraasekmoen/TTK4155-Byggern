@@ -61,10 +61,17 @@ void xmem_init(void)
 }
 
 void set_configs(){
-	SPI_init();				// Enable/initiate Serial Peripheral Interface
+	SPI_init();								// Enable/initiate Serial Peripheral Interface
 	
-	GICR |= (1 << INT1);	// Enable external interrupts on Pin PD3
+	// Interrupt Config
+	MCUCR |= (1 << ISC11) | (1 << ISC10);	// Configure INT1 such that rising edge triggers interrupt
+	sei();									// Set Global Interrupt Enable in SREG
+	GICR |= (1 << INT1);					// Enable external interrupts on Pin PD3
 }
+
+volatile uint8_t EXT_INT_FLAG = 0;
+ISR(INT1_vect){ EXT_INT_FLAG = 1; }
+
 
 
 void Init_ports(void)
@@ -74,7 +81,7 @@ void Init_ports(void)
 	DDRB |= (1<<PB0);
 	DDRB &= ~(1<<PB1);
 	
-	DDRB &= ~(1<<PB2) | ~(1<<PB3); // Configure pins PB2 and PB3 to act as inputs (for the USB slider buttons)
+	DDRB &= ~(1<<PB2) | ~(1<<PB3);			// Configure pins PB2 and PB3 to act as inputs (for the USB slider buttons)
 }
 
 void Init_pwm(void)
@@ -181,13 +188,6 @@ void SRAM_test(void)
 	printf("SRAM test completed with \r\n%4d errors in write phase and \r\n%4d errors in retrieval phase\r\n\r\n", write_errors, retrieval_errors);
 }
 
-void delay(int cycles){
-	// Delay
-	for(int j=0; j<10; j++)
-	{
-		for(int k=0; k<cycles; k++);
-	}
-}
 
 
 int main(void)
