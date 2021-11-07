@@ -29,3 +29,4 @@ void SPI_send(uint8_t *charray){
 	
 void SPI_SS_LOW() { PORTB &= ~(1<<PB4);}
 void SPI_SS_HIGH(){ PORTB |= (1<<PB4);}
+	

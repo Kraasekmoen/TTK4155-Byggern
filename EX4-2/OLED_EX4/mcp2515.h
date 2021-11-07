@@ -178,7 +178,8 @@ typedef enum {	NORMAL		= MODE_NORMAL,
 #include <SPI.h>
 
 //								---									MCP config and operations
-void		MCP_set_mode_loopback();
+void		MCP_init(mcp_mode md);
+void		MCP_set_mode(mcp_mode md);
 void		MCP_bit_modify(uint8_t red_addr, uint8_t mask, uint8_t data);
 void		MCP_reset();
 uint8_t		MCP_read_status();

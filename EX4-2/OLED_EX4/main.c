@@ -12,22 +12,13 @@
 #include <stdlib.h>
 #include <avr/interrupt.h>
 
-#include <OLED_Driver.h>
+//#include <OLED_Driver.h>
 #include <USART_Driver.h>
-#include <ADC_Driver.h>
+//#include <ADC_Driver.h>
 #include <SPI.h>
 #include <mcp2515.h>
+#include <CAN_Driver.h>
 
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-(byte & 0x80 ? '1' : '0'), \
-(byte & 0x40 ? '1' : '0'), \
-(byte & 0x20 ? '1' : '0'), \
-(byte & 0x10 ? '1' : '0'), \
-(byte & 0x08 ? '1' : '0'), \
-(byte & 0x04 ? '1' : '0'), \
-(byte & 0x02 ? '1' : '0'), \
-(byte & 0x01 ? '1' : '0')
 
 #define OFFSET 0x1000
 
@@ -50,8 +41,6 @@ int uart_putchar(char c, FILE *stream)
 	return 0;
 }
 
-
-
 void xmem_init(void)
 {
 	MCUCR |= (1<<SRE);
@@ -59,21 +48,6 @@ void xmem_init(void)
 	DDRC |= 0xFF;
 	PORTC = 0x00;
 }
-
-void set_configs(){
-	SPI_init();								// Enable/initiate Serial Peripheral Interface
-	
-	// Interrupt Config
-	MCUCR |= (1 << ISC11) | (1 << ISC10);	// Configure INT1 such that rising edge triggers interrupt
-	sei();									// Set Global Interrupt Enable in SREG
-	GICR |= (1 << INT1);					// Enable external interrupts on Pin PD3
-}
-
-volatile uint8_t EXT_INT_FLAG = 0;
-ISR(INT1_vect){ EXT_INT_FLAG = 1; }
-
-
-
 void Init_ports(void)
 {
 	DDRD |= (1<<PD6);
@@ -83,37 +57,28 @@ void Init_ports(void)
 	
 	DDRB &= ~(1<<PB2) | ~(1<<PB3);			// Configure pins PB2 and PB3 to act as inputs (for the USB slider buttons)
 }
-
 void Init_pwm(void)
 {
 	TCCR0 |= (1<<COM00) | (1<<WGM01) | (1<<CS00);
 }
+void set_configs(){
+	SPI_init();								// Enable/initiate Serial Peripheral Interface
+	
+	// Interrupt Config
+	MCUCR |= (1 << ISC11) | (0 << ISC10);	// Configure INT1 such that falling edge triggers interrupt (MCP INT is active low, remains low until intrp is cleared)
+	sei();									// Set Global Interrupt Enable in SREG
+	GICR |= (1 << INT1);					// Enable external interrupts on Pin PD3
+}
 
+// Interrupt handler
+volatile uint8_t EXT_INT_FLAG = 0;
+ISR(INT1_vect){ 
+	EXT_INT_FLAG = 1; 
+	printf("External interrupt received on INT1; flag set to %d \n", EXT_INT_FLAG);
+}
 
 /*
-uint8_t adc_read(uint8_t channel)
-{
-	// CS low, WR low
-	volatile char *ext_adc = (char *) 0x1400;
-	*ext_adc = channel;
-	*ext_adc &= ~(1<<2) &~ (1<<3) &~ (1<<5) &~ (1<<6);
-	*ext_adc |= (1<<4) | (1<<7);
-	
-	/*PORTC = channel;
-	PORTC &= ~(1<<2) &~ (1<<3) &~ (1<<5) &~ (1<<6);
-	PORTC |= (1<<4) | (1<<7);
-	*|
-	
-	// CS high, WR high
-	
-	while(!(PORTB & (1<<PB0)));
-	// CS low, RD low
-	uint8_t result = *ext_adc;
-	// RD high, CS high
-}
-*/
-	
-	void ADC_test_1(uint8_t *joy_origins){
+void ADC_test_1(uint8_t *joy_origins){
 		uint8_t *sampled_value;
 		
 		sampled_value = adc_read();
@@ -152,7 +117,7 @@ void SPI_READ_STATUS_TEST(){
 	printf("\n");
 	SPI_SS_HIGH();
 }
-
+*/
 void SRAM_test(void)
 {
 	volatile char *ext_ram = (char *) 0x1800; // Start address for the SRAM
@@ -188,24 +153,22 @@ void SRAM_test(void)
 	printf("SRAM test completed with \r\n%4d errors in write phase and \r\n%4d errors in retrieval phase\r\n\r\n", write_errors, retrieval_errors);
 }
 
+/*
+void Exercise_3_Demo(){
+	// Auto-calibrate joystick ADC outputs
+	uint8_t *joy_origins;
+	joy_origins = adc_joystick_autocalibrate(10);
+	printf("Sampled average origin (Joy1) = %d \n", joy_origins[0]);
+	printf("Sampled average origin (Joy2) = %d \n", joy_origins[1]);
 
-
-int main(void)
-{
-	// Initialize USART transmission drivers, as well as MCU ports and external memory
-	USART_init(MYUBRR);
-	stdout = &mystdout;
-	printf("Program started\n");
-	xmem_init();
-	Init_ports();
-	set_configs();
-	Init_pwm();
-	printf("XMEM Init completed\n");
-	SPI_init();
-	printf("SPI Init completed\n");
-
-	
-	/*
+	for (uint8_t i = 0; i<10; i++)
+	{
+		// Read each channel on ADC in sequence (hard-wired mode)
+		ADC_test_1(joy_origins);
+		
+	}
+}
+void Exercise_4_Demo(){
 	// Initialize OLED screen on USB board
 	oled_init();
 	// || OLED TESTS ||
@@ -223,42 +186,93 @@ int main(void)
 	for(int j=0; j<10; j++){
 		testPrint_font(j);
 	}
-	// || --- ||
-	*/
+}
+*/
+void Exercise_5_Demo(){
+	// Initialize MCP in loopback mode
+	MCP_init(LOOPBACK);
 	
-	// Test SRAM integrity
-	SRAM_test();
+	// Send a message to the MCP over SPI interface, command it to transmit it over CAN bus
+	CANMSG message;
+	message.ID_high = 0b1101;
+	message.ID_low = 0b1001;
+	message.data_length = 4;
+	for (uint8_t i = 0; i < message.data_length; i++){
+		message.data[i] = i;
+	}
+	printf("Attempting to send message over CAN: \n");
+	CAN_print_message(&message);
 	
-	MCP_set_mode_loopback();
-	uint8_t loops = 0;
-	while (loops<8)
-	{
-		SPI_READ_STATUS_TEST();
-		// Delay
+	while (!CAN_transmit_message(&message)){
+		printf("Unable to send\n");
 		for(int j=0; j<10; j++)
 		{
 			for(int k=0; k<30000; k++);
 		}
-		loops++;
 	}
+	printf("..sent!\n");
 		
-	/*
-	// Auto-calibrate joystick ADC outputs
-	uint8_t *joy_origins;
-	joy_origins = adc_joystick_autocalibrate(10);
-	printf("Sampled average origin (Joy1) = %d \n", joy_origins[0]);
-	printf("Sampled average origin (Joy2) = %d \n", joy_origins[1]);
-
-	
-	
-	// Main loop
-	while(1)
+	for(int j=0; j<10; j++)
 	{
-		// Read each channel on ADC in sequence (hard-wired mode)
-		ADC_test_1(joy_origins);
-		
+		for(int k=0; k<30000; k++);
 	}
-	*/
+		
+	// Read a received message from the CAN bus, demonstrate that it is the same as the one sent
+	if (EXT_INT_FLAG == 1) {EXT_INT_FLAG=0;}
+	
+	printf("Checking CANINTF rx flags..\n");
+	uint8_t INTFs = MCP_read_byte(MCP_CANINTF);
+	uint8_t RXnFs = INTFs & 0b00000011;
+	CANMSG rec;
+	switch (RXnFs)
+	{
+		case 0b00000001:
+			printf("Msg flag for RX0 discovered\n");
+			rec = CAN_read_rx_buffer(0);
+			if (rec.data_length == 9){
+				printf("Msg data length 9 - invalid message RX0!\n");
+			}
+			else{
+				CAN_print_message(&rec);
+			}
+			break;
+			
+		case 0b00000010:
+			printf("Message flag for RX1 discovered\n");
+			rec = CAN_read_rx_buffer(1);
+			if (rec.data_length == 9){
+				printf("Msg data length 9 - invalid message RX1!\n");
+			}
+			else{
+				CAN_print_message(&rec);
+			}
+			break;
+		
+		default:
+			printf("No message flags discovered\n");
+			break;
+	}
+	
+}
+
+
+int main(void)
+{
+	// Initialize USART transmission drivers, as well as MCU ports and external memory
+	USART_init(MYUBRR);
+	stdout = &mystdout;
+	xmem_init();
+	Init_ports();
+	set_configs();
+	Init_pwm();
+	SPI_init();
+	
+	// Test SRAM integrity
+	SRAM_test();
+	
+	Exercise_5_Demo();
+		
+	
 }
 
 

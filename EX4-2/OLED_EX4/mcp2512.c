@@ -8,23 +8,37 @@
 
 //								---									MCP config and operations
 
-void MCP_set_mode_loopback(){
+void MCP_init(mcp_mode md){
+	
+	// Initialize SPI for MCU, just to be sure
+	SPI_init();
+	
+	// Reset the MCP, just to be sure, and set the desired mode
+	MCP_reset();
+	for(int j=0; j<10; j++)
+	{
+		for(int k=0; k<30000; k++);
+	}
+	MCP_set_mode(md);
+	
+	// Verify that the MCP is in the correct mode
+	uint8_t can_status = MCP_read_byte(MCP_CANSTAT);
+	uint8_t can_mode = can_status & 0b11100000;		// First 3 bits of CANSTAT indicates the MCPs current mode
+	if (can_mode != md) { printf("MCP Error: Not initialized correctly!\nCAN STATUS: %d\n", can_status); }
+
+	MCP_write_byte(MCP_CANINTE, 0b00000011); // Only enable interrupts on message reception
+
+}
+
+
+void MCP_set_mode(mcp_mode md){
 	SPI_SS_LOW();						// Set slave select low
 	
 	SPI_send_byte(MCP_BITMOD);			// Send bit modify instruction to MCP
 	SPI_send_byte(MCP_CANCTRL);			// Send address of data to be modified
 	SPI_send_byte(0b11100000);			// Send modification mask
-	SPI_send_byte(MODE_LOOPBACK);		// Data byte; write to equates to 'loopback mode' to the CAN control register
+	SPI_send_byte(md);					// Data byte; write to equates to 'loopback mode' to the CAN control register
 	
-	SPI_SS_HIGH();
-}
-
-void MCP_set_mode(mcp_mode md){
-	SPI_SS_LOW();						
-	SPI_send_byte(MCP_BITMOD);			
-	SPI_send_byte(MCP_CANCTRL);			
-	SPI_send_byte(0b11100000);			
-	SPI_send_byte(md);					
 	SPI_SS_HIGH();
 }
 

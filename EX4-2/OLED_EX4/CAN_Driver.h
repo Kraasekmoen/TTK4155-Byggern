@@ -32,6 +32,7 @@ void CAN_ctrl_init(mcp_mode md);
 int CAN_check_buffer_pending_tx(uint8_t buf_num);
 int CAN_transmit_message(CANMSG* msg);
 CANMSG CAN_read_rx_buffer(uint8_t rx_buf);
+void CAN_print_message(CANMSG* msg);
 
 
 #endif /* CAN_DRIVER_H_ */
