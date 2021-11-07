@@ -9,6 +9,8 @@
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
+#define is_bit_set(sfr, bit) (sfr & (1 << bit))
+#define loop_until_bit_is_set(sfr, bit) while (!is_bit_set(sfr, bit))
 
 
 

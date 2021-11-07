@@ -167,6 +167,8 @@ Copyright 2003 Kimberly Otten Software Consulting
 #define MCP_RXB0DLC		0x65
 #define MCP_RXB0D0		0x66
 
+#define MCP_MODE_MASK	0b11100000
+
 typedef enum {	NORMAL		= MODE_NORMAL, 
 				SLEEP		= MODE_SLEEP,
 				LOOPBACK	= MODE_LOOPBACK,
@@ -183,6 +185,7 @@ void		MCP_set_mode(mcp_mode md);
 void		MCP_bit_modify(uint8_t red_addr, uint8_t mask, uint8_t data);
 void		MCP_reset();
 uint8_t		MCP_read_status();
+void		MCP_print_diagnostix();
 
 //								---									MCP SPI interfacing
 uint8_t		MCP_read_byte(uint8_t address);

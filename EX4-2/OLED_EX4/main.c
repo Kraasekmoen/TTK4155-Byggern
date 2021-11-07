@@ -27,7 +27,6 @@
 #define FOSC F_CPU// Clock Speed
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
-#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 
 static int uart_putchar(char c, FILE *stream);
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
@@ -222,6 +221,7 @@ void Exercise_5_Demo(){
 	
 	printf("Checking CANINTF rx flags..\n");
 	uint8_t INTFs = MCP_read_byte(MCP_CANINTF);
+	printf("INTFs: %d\n", INTFs);
 	uint8_t RXnFs = INTFs & 0b00000011;
 	CANMSG rec;
 	switch (RXnFs)
@@ -255,6 +255,15 @@ void Exercise_5_Demo(){
 	
 }
 
+void mcp_init_and_diag(){
+	MCP_init(LOOPBACK);
+	MCP_print_diagnostix();
+	
+	for(int j=0; j<10; j++)
+	{
+		for(int k=0; k<30000; k++);
+	}
+}
 
 int main(void)
 {
@@ -266,11 +275,23 @@ int main(void)
 	set_configs();
 	Init_pwm();
 	SPI_init();
+	MCP_init(LOOPBACK);
 	
 	// Test SRAM integrity
-	SRAM_test();
+	//SRAM_test();
 	
-	Exercise_5_Demo();
+	//Exercise_5_Demo();
+	while (true)
+	{
+		//void mcp_init_and_diag(){
+		
+		MCP_init(LOOPBACK);
+		for(int j=0; j<10; j++)
+		{
+			for(int k=0; k<30000; k++);
+		}
+
+	}
 		
 	
 }
