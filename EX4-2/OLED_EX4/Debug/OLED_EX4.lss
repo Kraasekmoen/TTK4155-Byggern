@@ -13,21 +13,21 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00001098  2**2
                   CONTENTS, READONLY
-  5 .debug_aranges 00000148  00000000  00000000  000010d4  2**0
+  5 .debug_aranges 00000140  00000000  00000000  000010d4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00001702  00000000  00000000  0000121c  2**0
+  6 .debug_info   00001689  00000000  00000000  00001214  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00000bd1  00000000  00000000  0000291e  2**0
+  7 .debug_abbrev 00000bb9  00000000  00000000  0000289d  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000a8a  00000000  00000000  000034ef  2**0
+  8 .debug_line   00000a4f  00000000  00000000  00003456  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000003b4  00000000  00000000  00003f7c  2**2
+  9 .debug_frame  000003a4  00000000  00000000  00003ea8  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000006b0  00000000  00000000  00004330  2**0
+ 10 .debug_str    0000069e  00000000  00000000  0000424c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000ce9  00000000  00000000  000049e0  2**0
+ 11 .debug_loc    00000c4e  00000000  00000000  000048ea  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000138  00000000  00000000  000056c9  2**0
+ 12 .debug_ranges 00000130  00000000  00000000  00005538  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -103,12 +103,12 @@ Disassembly of section .text:
   aa:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
 000000ae <uart_putchar>:
+		default:
+			printf("No message flags discovered\n");
 			break;
 	}
 	
 }
-
-void mcp_init_and_diag(){
   ae:	cf 93       	push	r28
   b0:	c8 2f       	mov	r28, r24
   b2:	8a 30       	cpi	r24, 0x0A	; 10
@@ -213,7 +213,7 @@ void mcp_init_and_diag(){
  16e:	18 95       	reti
 
 00000170 <main>:
-}
+
 
 int main(void)
 {
@@ -240,10 +240,10 @@ int main(void)
 	MCP_init(LOOPBACK);
  198:	80 e4       	ldi	r24, 0x40	; 64
  19a:	0e 94 7b 01 	call	0x2f6	; 0x2f6 <MCP_init>
+	
 	//Exercise_5_Demo();
 	while (true)
 	{
-		//void mcp_init_and_diag(){
 		
 		MCP_init(LOOPBACK);
  19e:	80 e4       	ldi	r24, 0x40	; 64
@@ -252,6 +252,7 @@ int main(void)
  1a6:	30 e0       	ldi	r19, 0x00	; 0
  1a8:	05 c0       	rjmp	.+10     	; 0x1b4 <main+0x44>
  1aa:	01 97       	sbiw	r24, 0x01	; 1
+		
 		for(int j=0; j<10; j++)
 		{
 			for(int k=0; k<30000; k++);
@@ -260,14 +261,14 @@ int main(void)
  1b0:	31 09       	sbc	r19, r1
 	while (true)
 	{
-		//void mcp_init_and_diag(){
 		
 		MCP_init(LOOPBACK);
+		
 		for(int j=0; j<10; j++)
  1b2:	a9 f3       	breq	.-22     	; 0x19e <main+0x2e>
-		for(int k=0; k<30000; k++);
-	}
+	
 }
+
 
 int main(void)
 {
@@ -288,10 +289,12 @@ void MCP_bit_modify(uint8_t red_addr, uint8_t mask, uint8_t data){
  1c0:	18 2f       	mov	r17, r24
  1c2:	d6 2f       	mov	r29, r22
  1c4:	c4 2f       	mov	r28, r20
+	// uint8_t send_array[4] = {MCP_BITMOD, red_addr, mask, data};
+		
 	SPI_SS_LOW();
  1c6:	0e 94 ae 01 	call	0x35c	; 0x35c <SPI_SS_LOW>
-	//uint8_t snd[4] = {MCP_BITMOD, red_addr, mask, data};
-	//SPI_send(snd);
+	
+	//SPI_send(send_array);
 	
 	SPI_send_byte(MCP_BITMOD);
  1ca:	85 e0       	ldi	r24, 0x05	; 5
@@ -548,30 +551,28 @@ void MCP_init(mcp_mode md){
  312:	80 e3       	ldi	r24, 0x30	; 48
  314:	95 e7       	ldi	r25, 0x75	; 117
  316:	f8 cf       	rjmp	.-16     	; 0x308 <MCP_init+0x12>
+	MCP_reset();
 	for(int j=0; j<10; j++)
 	{
 		for(int k=0; k<30000; k++);
 	}
-
-	MCP_write_byte(MCP_CANINTE, 0b00000011);				// Only enable interrupts on message reception
+	MCP_write_byte(MCP_CANINTE, MCP_RD_INT_MASK);					// Only enable interrupts on message reception
  318:	63 e0       	ldi	r22, 0x03	; 3
  31a:	8b e2       	ldi	r24, 0x2B	; 43
  31c:	0e 94 54 01 	call	0x2a8	; 0x2a8 <MCP_write_byte>
-	MCP_bit_modify(MCP_CANCTRL, 0b00010000, 0b00010000);	// Request abort for all transmittions
+	MCP_bit_modify(MCP_CANCTRL, MCP_TXABRT_MASK, MCP_TXABRT_MASK);	// Request abort for all transmittions; necessary for setting mode
  320:	40 e1       	ldi	r20, 0x10	; 16
  322:	60 e1       	ldi	r22, 0x10	; 16
  324:	8f e0       	ldi	r24, 0x0F	; 15
  326:	0e 94 dd 00 	call	0x1ba	; 0x1ba <MCP_bit_modify>
-
 	MCP_set_mode(md);
  32a:	8c 2f       	mov	r24, r28
  32c:	0e 94 f7 00 	call	0x1ee	; 0x1ee <MCP_set_mode>
-
 	// Verify that the MCP is in the correct mode
 	uint8_t can_status = MCP_read_byte(MCP_CANSTAT);
  330:	8e e0       	ldi	r24, 0x0E	; 14
  332:	0e 94 13 01 	call	0x226	; 0x226 <MCP_read_byte>
-	uint8_t can_mode = can_status & MCP_MODE_MASK;			// First 3 bits of CANSTAT indicates the MCPs current mode
+	uint8_t can_mode = can_status &= MCP_MODE_MASK;					// First 3 bits of CANSTAT indicates the MCPs current mode
 	if (can_mode != md) { 
  336:	80 7e       	andi	r24, 0xE0	; 224
  338:	c8 17       	cp	r28, r24
@@ -619,7 +620,7 @@ void SPI_SS_HIGH(){ PORTB |= (1<<PB4);}
 00000364 <SPI_init>:
 void SPI_init()
 {
-	//Set MOSI and SCK output, all others input 
+	//Set SS', MOSI and SCK output, all others input 
 		// "DDR_SPI = (1<<DD_MOSI)|(1<<DD_SCK)"
 		// Since MOSI is on Pin PB5, the actuals are set accordingly (see page 159 of manual)
 	DDRB = (1<<DDB4)|(1<<DDB5)|(1<<DDB7);
@@ -635,24 +636,56 @@ void SPI_init()
  370:	08 95       	ret
 
 00000372 <USART_Transmit>:
+#include <USART_Driver.h>
+
+void USART_Transmit(unsigned char data)
+{
+	/* Wait for empty transmit buffer */
+	while ( !( UCSR0A & (1<<UDRE0)) );
  372:	5d 9b       	sbis	0x0b, 5	; 11
  374:	fe cf       	rjmp	.-4      	; 0x372 <USART_Transmit>
+	
+	/* Put data into buffer, sends the data */
+	UDR0 = data;
  376:	8c b9       	out	0x0c, r24	; 12
  378:	08 95       	ret
 
 0000037a <USART_Receive>:
+}
+
+unsigned char USART_Receive(void)
+{
+	/* Wait for data to be received */
+	while ( !(UCSR0A & (1<<RXC0)) )
  37a:	5f 9b       	sbis	0x0b, 7	; 11
  37c:	fe cf       	rjmp	.-4      	; 0x37a <USART_Receive>
+	;
+	/* Get and return received data from buffer */
+	return UDR0;
  37e:	8c b1       	in	r24, 0x0c	; 12
+}
  380:	08 95       	ret
 
 00000382 <USART_init>:
+
+void USART_init(unsigned int ubrr)
+{
+	/* Set baud rate */
+	UBRR0H = (unsigned char) (ubrr>>8);
  382:	90 bd       	out	0x20, r25	; 32
+	UBRR0L = (unsigned char) (ubrr);
  384:	89 b9       	out	0x09, r24	; 9
+	
+	/* Enable receiver and transmitter */
+	UCSR0B = (1 << RXEN0) | (1 << TXEN0);
  386:	88 e1       	ldi	r24, 0x18	; 24
  388:	8a b9       	out	0x0a, r24	; 10
+	
+	/* Set frame format: 8data, 2stop bit */
+	UCSR0C = (1 << URSEL0) | (1 << USBS0) | (3 << UCSZ00);
  38a:	8e e8       	ldi	r24, 0x8E	; 142
  38c:	80 bd       	out	0x20, r24	; 32
+	fdevopen(USART_Transmit, USART_Receive);
  38e:	6d eb       	ldi	r22, 0xBD	; 189
  390:	71 e0       	ldi	r23, 0x01	; 1
  392:	89 eb       	ldi	r24, 0xB9	; 185

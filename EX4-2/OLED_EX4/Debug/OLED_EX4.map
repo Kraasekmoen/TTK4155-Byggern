@@ -129,8 +129,6 @@ Discarded input sections
                 0x00000000      0x106 main.o
  .text.Exercise_5_Demo
                 0x00000000      0x168 main.o
- .text.mcp_init_and_diag
-                0x00000000       0x22 main.o
  .text          0x00000000        0x0 mcp2512.o
  .data          0x00000000        0x0 mcp2512.o
  .bss           0x00000000        0x0 mcp2512.o
@@ -928,69 +926,69 @@ END GROUP
 .debug_sfnames
  *(.debug_sfnames)
 
-.debug_aranges  0x00000000      0x148
+.debug_aranges  0x00000000      0x140
  *(.debug_aranges)
  .debug_aranges
-                0x00000000       0x68 main.o
+                0x00000000       0x60 main.o
  .debug_aranges
-                0x00000068       0x68 mcp2512.o
+                0x00000060       0x68 mcp2512.o
  .debug_aranges
-                0x000000d0       0x48 SPI.o
+                0x000000c8       0x48 SPI.o
  .debug_aranges
-                0x00000118       0x30 USART_Driver.o
+                0x00000110       0x30 USART_Driver.o
 
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0x1702
+.debug_info     0x00000000     0x1689
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x5d0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega162/avr5/crtatmega162.o
- .debug_info    0x000005d0      0x83e main.o
- .debug_info    0x00000e0e      0x688 mcp2512.o
- .debug_info    0x00001496      0x158 SPI.o
- .debug_info    0x000015ee      0x114 USART_Driver.o
+ .debug_info    0x000005d0      0x7c5 main.o
+ .debug_info    0x00000d95      0x688 mcp2512.o
+ .debug_info    0x0000141d      0x158 SPI.o
+ .debug_info    0x00001575      0x114 USART_Driver.o
 
-.debug_abbrev   0x00000000      0xbd1
+.debug_abbrev   0x00000000      0xbb9
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x580 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega162/avr5/crtatmega162.o
- .debug_abbrev  0x00000580      0x2e7 main.o
- .debug_abbrev  0x00000867      0x1bb mcp2512.o
- .debug_abbrev  0x00000a22       0xfb SPI.o
- .debug_abbrev  0x00000b1d       0xb4 USART_Driver.o
+ .debug_abbrev  0x00000580      0x2cf main.o
+ .debug_abbrev  0x0000084f      0x1bb mcp2512.o
+ .debug_abbrev  0x00000a0a       0xfb SPI.o
+ .debug_abbrev  0x00000b05       0xb4 USART_Driver.o
 
-.debug_line     0x00000000      0xa8a
+.debug_line     0x00000000      0xa4f
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x13f C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega162/avr5/crtatmega162.o
- .debug_line    0x0000013f      0x421 main.o
- .debug_line    0x00000560      0x2dc mcp2512.o
- .debug_line    0x0000083c      0x13c SPI.o
- .debug_line    0x00000978      0x112 USART_Driver.o
+ .debug_line    0x0000013f      0x3e6 main.o
+ .debug_line    0x00000525      0x2dc mcp2512.o
+ .debug_line    0x00000801      0x13c SPI.o
+ .debug_line    0x0000093d      0x112 USART_Driver.o
 
-.debug_frame    0x00000000      0x3b4
+.debug_frame    0x00000000      0x3a4
  *(.debug_frame)
- .debug_frame   0x00000000      0x1a0 main.o
- .debug_frame   0x000001a0      0x148 mcp2512.o
- .debug_frame   0x000002e8       0x88 SPI.o
- .debug_frame   0x00000370       0x44 USART_Driver.o
+ .debug_frame   0x00000000      0x190 main.o
+ .debug_frame   0x00000190      0x148 mcp2512.o
+ .debug_frame   0x000002d8       0x88 SPI.o
+ .debug_frame   0x00000360       0x44 USART_Driver.o
 
-.debug_str      0x00000000      0x6b0
+.debug_str      0x00000000      0x69e
  *(.debug_str)
  .debug_str     0x00000000      0x1f6 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega162/avr5/crtatmega162.o
- .debug_str     0x000001f6      0x340 main.o
-                                0x390 (size before relaxing)
- .debug_str     0x00000536      0x10a mcp2512.o
+ .debug_str     0x000001f6      0x319 main.o
+                                0x369 (size before relaxing)
+ .debug_str     0x0000050f      0x11f mcp2512.o
                                 0x2fd (size before relaxing)
- .debug_str     0x00000640       0x13 SPI.o
+ .debug_str     0x0000062e       0x13 SPI.o
                                 0x1bd (size before relaxing)
- .debug_str     0x00000653       0x5d USART_Driver.o
+ .debug_str     0x00000641       0x5d USART_Driver.o
                                 0x18c (size before relaxing)
 
-.debug_loc      0x00000000      0xce9
+.debug_loc      0x00000000      0xc4e
  *(.debug_loc)
- .debug_loc     0x00000000      0x60b main.o
- .debug_loc     0x0000060b      0x5f2 mcp2512.o
- .debug_loc     0x00000bfd       0xc6 SPI.o
- .debug_loc     0x00000cc3       0x26 USART_Driver.o
+ .debug_loc     0x00000000      0x583 main.o
+ .debug_loc     0x00000583      0x5df mcp2512.o
+ .debug_loc     0x00000b62       0xc6 SPI.o
+ .debug_loc     0x00000c28       0x26 USART_Driver.o
 
 .debug_macinfo
  *(.debug_macinfo)
@@ -1010,12 +1008,12 @@ END GROUP
 .debug_pubtypes
  *(.debug_pubtypes)
 
-.debug_ranges   0x00000000      0x138
+.debug_ranges   0x00000000      0x130
  *(.debug_ranges)
- .debug_ranges  0x00000000       0x88 main.o
- .debug_ranges  0x00000088       0x58 mcp2512.o
- .debug_ranges  0x000000e0       0x38 SPI.o
- .debug_ranges  0x00000118       0x20 USART_Driver.o
+ .debug_ranges  0x00000000       0x80 main.o
+ .debug_ranges  0x00000080       0x58 mcp2512.o
+ .debug_ranges  0x000000d8       0x38 SPI.o
+ .debug_ranges  0x00000110       0x20 USART_Driver.o
 
 .debug_macro
  *(.debug_macro)

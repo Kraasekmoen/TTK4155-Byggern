@@ -19,15 +19,12 @@ void MCP_init(mcp_mode md){
 	{
 		for(int k=0; k<30000; k++);
 	}
-
-	MCP_write_byte(MCP_CANINTE, 0b00000011);				// Only enable interrupts on message reception
-	MCP_bit_modify(MCP_CANCTRL, 0b00010000, 0b00010000);	// Request abort for all transmittions
-
+	MCP_write_byte(MCP_CANINTE, MCP_RD_INT_MASK);					// Only enable interrupts on message reception
+	MCP_bit_modify(MCP_CANCTRL, MCP_TXABRT_MASK, MCP_TXABRT_MASK);	// Request abort for all transmittions; necessary for setting mode
 	MCP_set_mode(md);
-
 	// Verify that the MCP is in the correct mode
 	uint8_t can_status = MCP_read_byte(MCP_CANSTAT);
-	uint8_t can_mode = can_status & MCP_MODE_MASK;			// First 3 bits of CANSTAT indicates the MCPs current mode
+	uint8_t can_mode = can_status &= MCP_MODE_MASK;					// First 3 bits of CANSTAT indicates the MCPs current mode
 	if (can_mode != md) { 
 		printf("MCP Error: Init failed!\n");
 		MCP_print_diagnostix();
@@ -40,9 +37,11 @@ void MCP_set_mode(mcp_mode md){
 }
 
 void MCP_bit_modify(uint8_t red_addr, uint8_t mask, uint8_t data){
+	// uint8_t send_array[4] = {MCP_BITMOD, red_addr, mask, data};
+		
 	SPI_SS_LOW();
-	//uint8_t snd[4] = {MCP_BITMOD, red_addr, mask, data};
-	//SPI_send(snd);
+	
+	//SPI_send(send_array);
 	
 	SPI_send_byte(MCP_BITMOD);
 	SPI_send_byte(red_addr);

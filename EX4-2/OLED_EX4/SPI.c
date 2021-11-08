@@ -6,7 +6,7 @@
 
 void SPI_init()
 {
-	//Set MOSI and SCK output, all others input 
+	//Set SS', MOSI and SCK output, all others input 
 		// "DDR_SPI = (1<<DD_MOSI)|(1<<DD_SCK)"
 		// Since MOSI is on Pin PB5, the actuals are set accordingly (see page 159 of manual)
 	DDRB = (1<<DDB4)|(1<<DDB5)|(1<<DDB7);
@@ -23,7 +23,8 @@ uint8_t SPI_read(){	SPDR = 0x01; return SPDR;}
 void SPI_send_byte(uint8_t ch){ 
 	SPDR = ch;
 	
-	// SPSR: SPI Status Register		SPIF: SPI End of Transmission Flag; flags when full byte is written to SPDR			(see example at p 160)
+	// SPSR: SPI Status Register	
+	// SPIF: SPI End of Transmission Flag; flags when full byte is written to SPDR			(see example at p 160)
 	loop_until_bit_is_set(SPSR, SPIF);
 }
 void SPI_send(uint8_t *charray){

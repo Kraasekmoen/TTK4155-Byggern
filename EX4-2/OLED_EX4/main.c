@@ -255,15 +255,6 @@ void Exercise_5_Demo(){
 	
 }
 
-void mcp_init_and_diag(){
-	MCP_init(LOOPBACK);
-	MCP_print_diagnostix();
-	
-	for(int j=0; j<10; j++)
-	{
-		for(int k=0; k<30000; k++);
-	}
-}
 
 int main(void)
 {
@@ -283,14 +274,14 @@ int main(void)
 	//Exercise_5_Demo();
 	while (true)
 	{
-		//void mcp_init_and_diag(){
 		
 		MCP_init(LOOPBACK);
+		
 		for(int j=0; j<10; j++)
 		{
 			for(int k=0; k<30000; k++);
 		}
-
+		
 	}
 		
 	

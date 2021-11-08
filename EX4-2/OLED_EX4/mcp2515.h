@@ -167,7 +167,9 @@ Copyright 2003 Kimberly Otten Software Consulting
 #define MCP_RXB0DLC		0x65
 #define MCP_RXB0D0		0x66
 
-#define MCP_MODE_MASK	0b11100000
+#define MCP_MODE_MASK	0xE0
+#define MCP_RD_INT_MASK 0x03
+#define MCP_TXABRT_MASK 0x10
 
 typedef enum {	NORMAL		= MODE_NORMAL, 
 				SLEEP		= MODE_SLEEP,
