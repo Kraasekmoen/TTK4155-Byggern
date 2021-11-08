@@ -46,7 +46,7 @@ int CAN_transmit_message(CANMSG* msg){
 	MCP_write_byte(MCP_TXB0DLC + 0x10*buffer_num, msg->data_length);
 	
 	// Write message data to buffer
-	MCP_write(MCP_TXB0D0 + 0x10*buffer_num, msg->data);
+	MCP_write(MCP_TXB0D0 + 0x10*buffer_num, msg->data, msg->data_length);
 	
 	// Proclaim Send request	(There actually isn't a linear mapping between buff_num and RTS_TXn ...)
 	switch (buffer_num){

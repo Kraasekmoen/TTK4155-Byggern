@@ -272,15 +272,36 @@ int main(void)
 	//SRAM_test();
 	
 	//Exercise_5_Demo();
+	uint8_t rec;
+	uint8_t size = 5;
+	uint8_t arr[size];
+	for (int i = 0; i<size; i++){
+		arr[i] = i;
+	}
+
 	while (true)
-	{
-		
-		MCP_init(LOOPBACK);
-		
-		for(int j=0; j<10; j++)
+	{		
+		/*
+		SPI_SS_LOW();
+		SPI_send((uint8_t *)arr, size);
+		//SPI_send_byte((uint8_t) 0xAA);
+		rec = SPI_read();
+		/*
+		for (int i = 0; i<30; i++)
 		{
-			for(int k=0; k<30000; k++);
 		}
+		
+		SPI_SS_HIGH();
+		printf("Read byte: 0x%02X \n", rec);	
+		*/
+		
+		SPI_SS_LOW();
+		for (int i = 0; i<size; i++){
+			SPI_send_byte((uint8_t) arr[i]);
+			rec = SPI_read();
+			printf("Read byte %d of sent array: 0x%02X\n",i ,rec);
+		}
+		SPI_SS_HIGH();
 		
 	}
 		

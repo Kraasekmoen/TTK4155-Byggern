@@ -192,7 +192,7 @@ void		MCP_print_diagnostix();
 //								---									MCP SPI interfacing
 uint8_t		MCP_read_byte(uint8_t address);
 void		MCP_write_byte(uint8_t address, uint8_t data);
-void		MCP_write(uint8_t start_address, uint8_t *data);
+void		MCP_write(uint8_t start_address, uint8_t *data, uint8_t data_length);
 
 //								---									MCP CAN control functions
 void		MCP_request_to_send(unsigned int bfr);

@@ -107,11 +107,11 @@ void MCP_write_byte(uint8_t address, uint8_t data){
 	printf("Written: %d Read: %d\n", data, check);
 }
 
-void MCP_write(uint8_t start_address, uint8_t *data){
+void MCP_write(uint8_t start_address, uint8_t *data, uint8_t data_length){
 	SPI_SS_LOW();
 	SPI_send_byte(MCP_WRITE);
 	SPI_send_byte(start_address);
-	SPI_send(data);
+	SPI_send(data, data_length);
 	SPI_SS_HIGH();
 }
 

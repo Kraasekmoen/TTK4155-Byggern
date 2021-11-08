@@ -25,11 +25,15 @@ void SPI_send_byte(uint8_t ch){
 	
 	// SPSR: SPI Status Register	
 	// SPIF: SPI End of Transmission Flag; flags when full byte is written to SPDR			(see example at p 160)
-	loop_until_bit_is_set(SPSR, SPIF);
+	while(!(SPSR & (1<<SPIF)));
 }
-void SPI_send(uint8_t *charray){
-	for (uint8_t i = 0; i <= sizeof(charray); i++){	
-		SPI_send(charray[i]); 
+
+
+// http://www.eskimo.com/~scs/cclass/notes/sx10f.html	
+// https://stackoverflow.com/questions/10290610/how-can-i-find-the-number-of-elements-in-an-array
+void SPI_send(uint8_t *charray, uint8_t size){
+	for (uint8_t i = 0; i < size; i++){	
+		SPI_send_byte((uint8_t) charray[i]); 
 	}
 }
 	
