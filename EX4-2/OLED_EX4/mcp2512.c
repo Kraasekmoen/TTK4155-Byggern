@@ -43,23 +43,23 @@ void MCP_bit_modify(uint8_t red_addr, uint8_t mask, uint8_t data){
 	
 	//SPI_send(send_array);
 	
-	SPI_send_byte(MCP_BITMOD);
-	SPI_send_byte(red_addr);
-	SPI_send_byte(mask);
-	SPI_send_byte(data);
+	SPI_send(MCP_BITMOD);
+	SPI_send(red_addr);
+	SPI_send(mask);
+	SPI_send(data);
 	
 	SPI_SS_HIGH();
 }
 
 void MCP_reset(){
 	SPI_SS_LOW();
-	SPI_send_byte(MCP_RESET);
+	SPI_send(MCP_RESET);
 	SPI_SS_HIGH();
 }
 
 uint8_t MCP_read_status(){
 	SPI_SS_LOW();
-	SPI_send_byte(MCP_READ_STATUS);
+	SPI_send(MCP_READ_STATUS);
 	uint8_t rec = SPI_read();
 	SPI_SS_HIGH();
 	return rec;
@@ -88,9 +88,24 @@ uint8_t MCP_read_byte(uint8_t address){
 	// Raise SS
 
 	SPI_SS_LOW();
-	SPI_send_byte(MCP_READ);
-	SPI_send_byte(address);
+	SPI_send(MCP_READ);
+	SPI_send(address);
 	uint8_t rec = SPI_read();
+	SPI_SS_HIGH();
+	
+	return rec;
+}
+
+uint8_t* MCP_read(uint8_t address, uint8_t length){
+	SPI_SS_LOW();
+	SPI_send(MCP_READ);
+	SPI_send(address);
+	uint8_t rec[length];
+	
+	for (int i = 0; i<length; i++){
+		rec[i] = SPI_read();
+	}
+	
 	SPI_SS_HIGH();
 	
 	return rec;
@@ -98,27 +113,30 @@ uint8_t MCP_read_byte(uint8_t address){
 
 void MCP_write_byte(uint8_t address, uint8_t data){
 	SPI_SS_LOW();
-	SPI_send_byte(MCP_WRITE);
-	SPI_send_byte(address);
-	SPI_send_byte(data);
+	SPI_send(MCP_WRITE);
+	SPI_send(address);
+	SPI_send(data);
 	SPI_SS_HIGH();
 	
-	uint8_t check = MCP_read_byte(address);																				// !!! 
-	printf("Written: %d Read: %d\n", data, check);
+	//uint8_t check = MCP_read_byte(address);																				// !!! 
+	//printf("Written: %d Read: %d\n", data, check);
 }
 
 void MCP_write(uint8_t start_address, uint8_t *data, uint8_t data_length){
 	SPI_SS_LOW();
-	SPI_send_byte(MCP_WRITE);
-	SPI_send_byte(start_address);
-	SPI_send(data, data_length);
+	SPI_send(MCP_WRITE);
+	SPI_send(start_address);
+	for (uint8_t i = 0; i<data_length; i++){
+		SPI_send(data[i]);
+		//printf("MCP_W: %d,%d\n",i, data[i]);
+	}
 	SPI_SS_HIGH();
 }
 
 //								---									MCP CAN control functions
 
-void MCP_request_to_send(unsigned int bfr){
+void MCP_request_to_send(uint8_t bfr){
 	SPI_SS_LOW();
-	SPI_send_byte(bfr);
+	SPI_send(bfr);			// MCP_RTS_TXn counts as both command and address
 	SPI_SS_HIGH();
 }

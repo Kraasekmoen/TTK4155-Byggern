@@ -7,14 +7,14 @@
 #include <CAN_Driver.h>
 
 // 
-int CAN_check_buffer_pending_tx(uint8_t buf_num){
+int CAN_check_tx_buffer_pending(uint8_t buf_num){
 	if (buf_num > 2) { 
-		printf("CAN_Driver Error: Attempted to check transmit buffer that doesn't exist! \n"); 
+		printf("CAN_Driver Error: Attempted to check invalid txbfr! \n"); 
 		return 1; 
 	}
 	
 	uint8_t tx_ctrl_reg = MCP_read_byte(MCP_TXB0CTRL + buf_num * 0x10);		// Extract control register of transmit buffer
-	uint8_t pending_tx = tx_ctrl_reg & MCP_TXREQ;							// Isolate the TXREQ-bit
+	uint8_t pending_tx = tx_ctrl_reg &= MCP_TXREQ;							// Isolate the TXREQ-bit
 	if (pending_tx == MCP_TXREQ){
 		return 1;		
 	}
@@ -25,30 +25,43 @@ int CAN_check_buffer_pending_tx(uint8_t buf_num){
 
 int CAN_transmit_message(CANMSG* msg){
 	
-	// Check which, if any, of transmit buffers are vacant.
-	// If none are available, the function returns False
+	// Check which, if any, of transmit buffers are vacant. If none are available, the function returns False
 	static uint8_t buffer_num = 0;
 	for (uint8_t i = 0; i<3; i++){
-		if (!CAN_check_buffer_pending_tx(i)){
+		if (!CAN_check_tx_buffer_pending(i)){
 			buffer_num = i;
 			break;
 		}
-		if (CAN_check_buffer_pending_tx(i) && i > 1){
+		if (CAN_check_tx_buffer_pending(i) && i > 1){
 			return 0;
 		}
 	}
+	//printf("Buffnum %d\n", buffer_num);
 	
-	// Write message ID to buffer
-	MCP_write_byte(MCP_TXB0SIDH + 0x10*buffer_num, msg->ID_high);
+	// Compile message
+	MCP_write_byte(MCP_TXB0SIDH + 0x10*buffer_num, msg->ID_high);										// Write message ID to buffer
 	MCP_write_byte(MCP_TXB0SIDL + 0x10*buffer_num, msg->ID_low);
+	MCP_write_byte(MCP_TXB0DLC + 0x10*buffer_num, msg->data_length);									// Write message data length to buffer
+	MCP_write(MCP_TXB0D0 + 0x10*buffer_num,(uint8_t *) msg->data,(uint8_t) msg->data_length);			// Write message data to buffer
 	
-	// Write message data length to buffer
-	MCP_write_byte(MCP_TXB0DLC + 0x10*buffer_num, msg->data_length);
+	CAN_print_message(msg);
 	
-	// Write message data to buffer
-	MCP_write(MCP_TXB0D0 + 0x10*buffer_num, msg->data, msg->data_length);
+	// Test if message was written correctly
+	CANMSG tst_msg;
+	tst_msg.ID_high = MCP_read_byte(MCP_TXB0SIDH + 0x10*buffer_num);
+	tst_msg.ID_low = MCP_read_byte(MCP_TXB0SIDL + 0x10*buffer_num);
+	tst_msg.data_length = MCP_read_byte(MCP_TXB0DLC + 0x10*buffer_num);
+	//tst_msg.data = MCP_read(MCP_TXB0D0 + 0x10*buffer_num, tst_msg.data_length);
+	
+	CAN_print_message(&tst_msg);
+	
+	if (tst_msg.ID_high != msg->ID_high || tst_msg.ID_low != msg->ID_low || tst_msg.data_length != msg->data_length){
+		printf("CAN_snd_err\n");
+	}
 	
 	// Proclaim Send request	(There actually isn't a linear mapping between buff_num and RTS_TXn ...)
+	MCP_request_to_send(MCP_RTS_ALL);
+	/*
 	switch (buffer_num){
 		case 0:
 			MCP_request_to_send(MCP_RTS_TX0);
@@ -65,12 +78,12 @@ int CAN_transmit_message(CANMSG* msg){
 		default:
 			MCP_request_to_send(MCP_RTS_ALL);
 	}
-	
+	*/
 	return 1;
 }
 
 CANMSG CAN_read_rx_buffer(uint8_t rx_buf){
-	static CANMSG rec;
+	CANMSG rec;
 	rec.data_length = 9;
 	if (rx_buf != 0 && rx_buf != 1) { printf("CAN Error: Requested read from buffer that doesn't exist; %d \n", rx_buf); return rec; }
 

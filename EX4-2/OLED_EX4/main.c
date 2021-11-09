@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <avr/interrupt.h>
 
-//#include <OLED_Driver.h>
+#include <OLED_Driver.h>
 #include <USART_Driver.h>
-//#include <ADC_Driver.h>
+#include <ADC_Driver.h>
 #include <SPI.h>
 #include <mcp2515.h>
 #include <CAN_Driver.h>
@@ -64,9 +64,21 @@ void set_configs(){
 	SPI_init();								// Enable/initiate Serial Peripheral Interface
 	
 	// Interrupt Config
-	MCUCR |= (1 << ISC11) | (0 << ISC10);	// Configure INT1 such that falling edge triggers interrupt (MCP INT is active low, remains low until intrp is cleared)
+	MCUCR |= (1 << ISC11);	// Configure INT1 such that falling edge triggers interrupt (MCP INT is active low, remains low until intrp is cleared)
+	MCUCR &= ~(1 << ISC10);
 	sei();									// Set Global Interrupt Enable in SREG
 	GICR |= (1 << INT1);					// Enable external interrupts on Pin PD3
+}
+
+void MAIN_INITS(){
+	USART_init(MYUBRR);
+	stdout = &mystdout;
+	xmem_init();
+	Init_ports();
+	set_configs();
+	Init_pwm();
+	SPI_init();
+	MCP_init(LOOPBACK);
 }
 
 // Interrupt handler
@@ -76,6 +88,7 @@ ISR(INT1_vect){
 	printf("External interrupt received on INT1; flag set to %d \n", EXT_INT_FLAG);
 }
 
+// Test and demo code below //
 /*
 void ADC_test_1(uint8_t *joy_origins){
 		uint8_t *sampled_value;
@@ -151,7 +164,6 @@ void SRAM_test(void)
 	}
 	printf("SRAM test completed with \r\n%4d errors in write phase and \r\n%4d errors in retrieval phase\r\n\r\n", write_errors, retrieval_errors);
 }
-
 /*
 void Exercise_3_Demo(){
 	// Auto-calibrate joystick ADC outputs
@@ -197,9 +209,9 @@ void Exercise_5_Demo(){
 	message.ID_low = 0b1001;
 	message.data_length = 4;
 	for (uint8_t i = 0; i < message.data_length; i++){
-		message.data[i] = i;
+		message.data[i] = i+4;
 	}
-	printf("Attempting to send message over CAN: \n");
+	printf("Sending message over CAN: \n");
 	CAN_print_message(&message);
 	
 	while (!CAN_transmit_message(&message)){
@@ -219,15 +231,15 @@ void Exercise_5_Demo(){
 	// Read a received message from the CAN bus, demonstrate that it is the same as the one sent
 	if (EXT_INT_FLAG == 1) {EXT_INT_FLAG=0;}
 	
-	printf("Checking CANINTF rx flags..\n");
+	printf("Checking CANINTF..\n");
 	uint8_t INTFs = MCP_read_byte(MCP_CANINTF);
 	printf("INTFs: %d\n", INTFs);
-	uint8_t RXnFs = INTFs & 0b00000011;
+	uint8_t RXnFs = INTFs &= 0b00000011;
 	CANMSG rec;
 	switch (RXnFs)
 	{
 		case 0b00000001:
-			printf("Msg flag for RX0 discovered\n");
+			printf("Msg flag for RX0!\n\n");
 			rec = CAN_read_rx_buffer(0);
 			if (rec.data_length == 9){
 				printf("Msg data length 9 - invalid message RX0!\n");
@@ -238,7 +250,7 @@ void Exercise_5_Demo(){
 			break;
 			
 		case 0b00000010:
-			printf("Message flag for RX1 discovered\n");
+			printf("Message flag for RX1!\n\n");
 			rec = CAN_read_rx_buffer(1);
 			if (rec.data_length == 9){
 				printf("Msg data length 9 - invalid message RX1!\n");
@@ -249,62 +261,71 @@ void Exercise_5_Demo(){
 			break;
 		
 		default:
-			printf("No message flags discovered\n");
+			printf("No message flags..\n\n");
 			break;
 	}
 	
 }
 
+void SPI_failure_demo(){		
+	uint8_t rec;
+	uint8_t arr[2] = {0x01, 0x02};
+		
+	
+	for (uint8_t i = 0; i < 2; i++){
+		MCP_write_byte(MCP_CANINTF, 0x00);
+
+		SPI_SS_LOW();
+		SPI_send(MCP_WRITE);
+		SPI_send(MCP_CANINTE);
+		SPI_send(arr[i]);
+		printf("Writing CANINTE: 0x%02X\n", arr[i]);
+		printf("Read from SPDR: 0x%02X\n", SPI_read());
+		SPI_SS_HIGH();
+		
+		SPI_SS_LOW();
+		SPI_send(MCP_READ);
+		SPI_send(MCP_CANINTE);
+		printf("Read from CANINTE: 0x%02X\n", SPI_read());
+		SPI_SS_HIGH();
+		
+		SPI_SS_LOW();
+		SPI_send(MCP_READ);
+		SPI_send(MCP_CANINTF);
+		printf("Read from CANINTF: 0x%02X\n\n", SPI_read());
+		SPI_SS_HIGH();
+	}
+	
+	
+}
+void MCP_success_demo(uint8_t des_caninte){				// Read CANINTE, write to CANINTE and read CANINTE again
+	uint8_t caninte = MCP_read_byte(MCP_CANINTE);
+	printf("Init CANINTE: 0x%02X\n", caninte);
+	printf("Desired CANINTE: 0x%02X\n", des_caninte);
+	MCP_write_byte(MCP_CANINTE, des_caninte);
+	caninte = MCP_read_byte(MCP_CANINTE);
+	printf("New CANINTE: 0x%02X\n\n", caninte);
+}
+
+
+
 
 int main(void)
 {
 	// Initialize USART transmission drivers, as well as MCU ports and external memory
-	USART_init(MYUBRR);
-	stdout = &mystdout;
-	xmem_init();
-	Init_ports();
-	set_configs();
-	Init_pwm();
-	SPI_init();
-	MCP_init(LOOPBACK);
+	MAIN_INITS();
 	
 	// Test SRAM integrity
 	//SRAM_test();
 	
 	//Exercise_5_Demo();
-	uint8_t rec;
-	uint8_t size = 5;
-	uint8_t arr[size];
-	for (int i = 0; i<size; i++){
-		arr[i] = i;
-	}
-
+	
 	while (true)
-	{		
-		/*
-		SPI_SS_LOW();
-		SPI_send((uint8_t *)arr, size);
-		//SPI_send_byte((uint8_t) 0xAA);
-		rec = SPI_read();
-		/*
-		for (int i = 0; i<30; i++)
-		{
-		}
-		
-		SPI_SS_HIGH();
-		printf("Read byte: 0x%02X \n", rec);	
-		*/
-		
-		SPI_SS_LOW();
-		for (int i = 0; i<size; i++){
-			SPI_send_byte((uint8_t) arr[i]);
-			rec = SPI_read();
-			printf("Read byte %d of sent array: 0x%02X\n",i ,rec);
-		}
-		SPI_SS_HIGH();
-		
-	}
-		
+	{
+		// Essentially unpacked versions of MCP2515-driver read/send functions. Will successfully write to registers, even though scope SS is wack and SPDR read yields 0x00
+		SPI_failure_demo();
+	}		
+	
 	
 }
 
