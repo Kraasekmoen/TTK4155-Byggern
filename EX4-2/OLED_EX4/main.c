@@ -85,7 +85,7 @@ void MAIN_INITS(){
 volatile uint8_t EXT_INT_FLAG = 0;
 ISR(INT1_vect){ 
 	EXT_INT_FLAG = 1; 
-	printf("External interrupt received on INT1; flag set to %d \n", EXT_INT_FLAG);
+	printf("\nExternal interrupt received on INT1!\n");
 }
 
 // Test and demo code below //
@@ -228,18 +228,18 @@ void Exercise_5_Demo(){
 		for(int k=0; k<30000; k++);
 	}
 		
-	// Read a received message from the CAN bus, demonstrate that it is the same as the one sent
+	// Clear interrupt flag
 	if (EXT_INT_FLAG == 1) {EXT_INT_FLAG=0;}
-	
-	printf("Checking CANINTF..\n");
+		
+	// Read a received message from the CAN bus, demonstrate that it is the same as the one sent
 	uint8_t INTFs = MCP_read_byte(MCP_CANINTF);
-	printf("INTFs: %d\n", INTFs);
+	printf("CANINTF: 0x%02X\n", INTFs);
 	uint8_t RXnFs = INTFs &= 0b00000011;
 	CANMSG rec;
 	switch (RXnFs)
 	{
 		case 0b00000001:
-			printf("Msg flag for RX0!\n\n");
+			printf("Msg flag for RX0!\n");
 			rec = CAN_read_rx_buffer(0);
 			if (rec.data_length == 9){
 				printf("Msg data length 9 - invalid message RX0!\n");
@@ -250,23 +250,26 @@ void Exercise_5_Demo(){
 			break;
 			
 		case 0b00000010:
-			printf("Message flag for RX1!\n\n");
+			printf("Message flag for RX1!\n");
 			rec = CAN_read_rx_buffer(1);
 			if (rec.data_length == 9){
 				printf("Msg data length 9 - invalid message RX1!\n");
 			}
 			else{
+				printf("Received: \n");
 				CAN_print_message(&rec);
 			}
 			break;
 		
 		default:
-			printf("No message flags..\n\n");
+			printf("No message flags..\n");
 			break;
 	}
+	printf("\n");
 	
 }
 
+/*
 void SPI_failure_demo(){		
 	uint8_t rec;
 	uint8_t arr[2] = {0x01, 0x02};
@@ -306,7 +309,7 @@ void MCP_success_demo(uint8_t des_caninte){				// Read CANINTE, write to CANINTE
 	caninte = MCP_read_byte(MCP_CANINTE);
 	printf("New CANINTE: 0x%02X\n\n", caninte);
 }
-
+*/
 
 
 
@@ -316,15 +319,9 @@ int main(void)
 	MAIN_INITS();
 	
 	// Test SRAM integrity
-	//SRAM_test();
+	SRAM_test();
 	
-	//Exercise_5_Demo();
-	
-	while (true)
-	{
-		// Essentially unpacked versions of MCP2515-driver read/send functions. Will successfully write to registers, even though scope SS is wack and SPDR read yields 0x00
-		SPI_failure_demo();
-	}		
+	Exercise_5_Demo();	
 	
 	
 }

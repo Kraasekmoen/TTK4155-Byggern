@@ -43,42 +43,53 @@ int CAN_transmit_message(CANMSG* msg){
 	MCP_write_byte(MCP_TXB0SIDL + 0x10*buffer_num, msg->ID_low);
 	MCP_write_byte(MCP_TXB0DLC + 0x10*buffer_num, msg->data_length);									// Write message data length to buffer
 	MCP_write(MCP_TXB0D0 + 0x10*buffer_num,(uint8_t *) msg->data,(uint8_t) msg->data_length);			// Write message data to buffer
-	
-	CAN_print_message(msg);
-	
+		
 	// Test if message was written correctly
 	CANMSG tst_msg;
 	tst_msg.ID_high = MCP_read_byte(MCP_TXB0SIDH + 0x10*buffer_num);
 	tst_msg.ID_low = MCP_read_byte(MCP_TXB0SIDL + 0x10*buffer_num);
 	tst_msg.data_length = MCP_read_byte(MCP_TXB0DLC + 0x10*buffer_num);
-	//tst_msg.data = MCP_read(MCP_TXB0D0 + 0x10*buffer_num, tst_msg.data_length);
+	for (uint8_t i = 0; i<tst_msg.data_length; i++){
+		tst_msg.data[i] = MCP_read_byte(MCP_TXB0D0 + 0x10*buffer_num + sizeof(uint8_t)*i);
+	}
 	
-	CAN_print_message(&tst_msg);
+	//CAN_print_message(&tst_msg);
 	
 	if (tst_msg.ID_high != msg->ID_high || tst_msg.ID_low != msg->ID_low || tst_msg.data_length != msg->data_length){
 		printf("CAN_snd_err\n");
 	}
-	
-	// Proclaim Send request	(There actually isn't a linear mapping between buff_num and RTS_TXn ...)
-	MCP_request_to_send(MCP_RTS_ALL);
 	/*
+	// Test feedback
+	MCP_bit_modify(MCP_TXB0CTRL, 0xB, 0xB);
+	printf("TXBnCTRL: %d\n", MCP_read_byte(MCP_TXB0CTRL));
+	printf("CANINTE: %d\n", MCP_read_byte(MCP_CANINTE));
+	printf("CANINTF: %d\n", MCP_read_byte(MCP_CANINTF));
+	MCP_request_to_send(0b10000111);
+	//
+	*/
+	// Proclaim Send request	(There actually isn't a linear mapping between buff_num and RTS_TXn ...)	
 	switch (buffer_num){
 		case 0:
-			MCP_request_to_send(MCP_RTS_TX0);
+			//MCP_request_to_send(MCP_RTS_TX0);
+			MCP_bit_modify(MCP_TXB0CTRL + buffer_num*0x10, 0x08, 0x08);
 			break;
 			
 		case 1:
-			MCP_request_to_send(MCP_RTS_TX1);
+			//MCP_request_to_send(MCP_RTS_TX1);
+			MCP_bit_modify(MCP_TXB0CTRL + buffer_num*0x10, 0x08, 0x08);
 			break;
 		
 		case 2:
-			MCP_request_to_send(MCP_RTS_TX2);
+			//MCP_request_to_send(MCP_RTS_TX2);
+			MCP_bit_modify(MCP_TXB0CTRL + buffer_num*0x10, 0x08, 0x08);
 			break;
 		
 		default:
-			MCP_request_to_send(MCP_RTS_ALL);
+			//MCP_request_to_send(MCP_RTS_ALL);
+			MCP_bit_modify(MCP_TXB0CTRL			, 0x08, 0x08);
+			MCP_bit_modify(MCP_TXB0CTRL + 0x10	, 0x08, 0x08);
+			MCP_bit_modify(MCP_TXB0CTRL + 0x20	, 0x08, 0x08);
 	}
-	*/
 	return 1;
 }
 

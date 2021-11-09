@@ -96,7 +96,7 @@ uint8_t MCP_read_byte(uint8_t address){
 	return rec;
 }
 
-uint8_t* MCP_read(uint8_t address, uint8_t length){
+uint8_t * MCP_read(uint8_t address, uint8_t length){
 	SPI_SS_LOW();
 	SPI_send(MCP_READ);
 	SPI_send(address);
