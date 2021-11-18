@@ -206,3 +206,14 @@ uint8_t can_receive(CAN_MESSAGE* can_msg, uint8_t rx_mb_id)
 	}
 }
 
+void can_print_message(CAN_MESSAGE* msg){
+	uint8_t id = msg->id;
+	printf("Message ID: %d\n\r", id);
+	uint8_t len = msg->data_length;
+	printf("Message data, %d bytes: ", len);
+	for (uint8_t i = 0; i < len; i++){
+		printf("%d ", msg->data[i]);
+	}
+	
+	printf("\n\r");
+}
