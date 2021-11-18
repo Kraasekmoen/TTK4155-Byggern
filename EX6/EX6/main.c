@@ -7,12 +7,18 @@
 
 
 #include "sam.h"
+#include "printf-stdarg.h"
+#include "uart.h"
+#include "can_controller.h"
+#include "can_interrupt.h"
 
 // User-defined thingies
 //#define LED1 PIO_PA19
 //#define LED2 PIO_PA20
 
 #define CAN_BAUD_RATE 250000
+
+
 
 void LED_init(){
 	// 'Turn on the power' on Port A
@@ -23,10 +29,6 @@ void LED_init(){
 	PIOA->PIO_OER = PIO_OER_P19;
 	PIOA->PIO_PER = PIO_PER_P20;
 	PIOA->PIO_OER = PIO_OER_P20;
-	
-	
-	// Init Switches
-	// (interrupts and stuff? Fuck that)
 }
 
 
@@ -98,41 +100,39 @@ void LED_toggle_demo(){
 	
 	for (int i = 0; i<1000; i++){
 		for (int k = 0; k<10000; k++){}
+	}	
+}
+
+void CAN_demo(){
+	CAN_MESSAGE msg;
+	
+	for (int n=0; n<3; n++){
+		printf("Checking mailbox %d\n\r",n);
+		if (!can_receive(&msg, n)){
+			can_print_message(&msg);
+		}
+		else{
+			printf("No mail today...\n\r");
+		}
 	}
-	
-	printf("This is an output test\n\r");
-	
+	printf("\n\r");
 }
 
 int main(void)
 {
-    /* Initialize the SAM system */
     SystemInit();
-	WDT->WDT_MR = WDT_MR_WDDIS;			//Disable watchdog
+	WDT->WDT_MR = WDT_MR_WDDIS;						//Disable watchdog
 
-	//LED_init();
-	configure_uart();
-	//can_init_def_tx_rx_mb(0x293112);	// SMP:0 BRP:41 SJW:3 PROPAG:1 PHS1:1 PHS2:2
-	printf("Statement\n\r");
+	LED_init();
+	configure_uart();								// UART printf init
+	can_init_def_tx_rx_mb(0x293112);				// SMP:0 BRP:41 SJW:3 PROPAG:1 PHS1:1 PHS2:2
 
-    /* Replace with your application code */
     while (1) 
     {
-		//LED_toggle_demo();
-		//feed_watchdog();
-		printf("Statement\n\r");
+		for (int i = 0; i<1000; i++) { for (int j=0; j<30000; j++){} }
+		
+		LED_toggle_demo();
+		CAN_demo();
     }
 }
 
-
-int main(void)
-{
-	/* Initialize the SAM system */
-	SystemInit();
-	WDT->WDT_MR = WDT_MR_WDDIS;			//Disable watchdog
-	configure_uart();
-
-	while (1){
-		printf("Statement\n\r");
-	}
-}
