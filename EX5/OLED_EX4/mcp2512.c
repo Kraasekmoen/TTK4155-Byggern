@@ -22,7 +22,6 @@ void MCP_init(mcp_mode md){
 	MCP_write_byte(MCP_CANINTE, MCP_RD_INT_MASK);					// Only enable interrupts on message reception
 	MCP_bit_modify(MCP_CANCTRL, MCP_TXABRT_MASK, MCP_TXABRT_MASK);	// Request abort for all transmittions; necessary for setting mode
 	
-	///*	// Randomly received and doesn't receive messages; if it does, it's empty
 	// Set CAN timing settings
 	MCP_write_byte(MCP_CNF1, 0b11000010);	// SJW:4 BRP:3
 	MCP_write_byte(MCP_CNF2, 0b11001001);	// BTLMODE:1 SAM:1 PS1:2 PROPSEG:2

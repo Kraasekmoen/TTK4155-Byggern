@@ -36,7 +36,6 @@ int CAN_transmit_message(CANMSG* msg){
 			return 0;
 		}
 	}
-	//printf("Buffnum %d\n", buffer_num);
 	
 	// Compile message
 	MCP_write_byte(MCP_TXB0SIDH + 0x10*buffer_num, msg->ID_high);										// Write message ID to buffer
@@ -52,22 +51,14 @@ int CAN_transmit_message(CANMSG* msg){
 	for (uint8_t i = 0; i<tst_msg.data_length; i++){
 		tst_msg.data[i] = MCP_read_byte(MCP_TXB0D0 + 0x10*buffer_num + sizeof(uint8_t)*i);
 	}
-	
-	//CAN_print_message(&tst_msg);
-	
+		
 	if (tst_msg.ID_high != msg->ID_high || tst_msg.ID_low != msg->ID_low || tst_msg.data_length != msg->data_length){
 		printf("CAN_snd_err\n");
 	}
-	/*
-	// Test feedback
-	MCP_bit_modify(MCP_TXB0CTRL, 0xB, 0xB);
-	printf("TXBnCTRL: %d\n", MCP_read_byte(MCP_TXB0CTRL));
-	printf("CANINTE: %d\n", MCP_read_byte(MCP_CANINTE));
-	printf("CANINTF: %d\n", MCP_read_byte(MCP_CANINTF));
-	MCP_request_to_send(0b10000111);
-	//
-	*/
-	// Proclaim Send request	(There actually isn't a linear mapping between buff_num and RTS_TXn ...)	
+
+	
+	// TODO: Why in the heck does manually writing to RTS register work, but the literal RTS command doesn't??
+	// Proclaim Send request	(There actually isn't a linear mapping between buff_num and RTS_TXn ..?)	
 	switch (buffer_num){
 		case 0:
 			//MCP_request_to_send(MCP_RTS_TX0);
@@ -90,6 +81,8 @@ int CAN_transmit_message(CANMSG* msg){
 			MCP_bit_modify(MCP_TXB0CTRL + 0x10	, 0x08, 0x08);
 			MCP_bit_modify(MCP_TXB0CTRL + 0x20	, 0x08, 0x08);
 	}
+
+	MCP_bit_modify(MCP_CANINTF,0b00011100, 0);		// Clear 'TX buffer empty' flags
 	return 1;
 }
 
@@ -106,6 +99,41 @@ CANMSG CAN_read_rx_buffer(uint8_t rx_buf){
 		rec.data[m] = MCP_read_byte(MCP_RXB0D0 + m + 0x10*rx_buf);
 	}
 	return rec;
+}
+
+// Read a received message from the CAN bus. Assumes interrupt has already been received
+CANMSG CAN_get_mail(){
+	uint8_t INTFs = MCP_read_byte(MCP_CANINTF);
+	printf("CANINTF: 0x%02X\n", INTFs);
+	uint8_t RXnFs = INTFs &= 0b00000011;
+	CANMSG rec;
+	char msg_rec[] = "Mail found in RX%d!\n";
+	char msg_err[] = "CAN read failure RX%d!\n";		// Data length defaults to 9 when read is unsuccessful
+	if (rec.data_length == 9){
+		printf(msg_err,3);
+		return rec;
+	}
+	
+	switch (RXnFs)
+	{
+		case 0b00000001:
+		printf(msg_rec,0);
+		rec = CAN_read_rx_buffer(0);
+		return rec;
+		break;
+		
+		case 0b00000010:
+		printf(msg_rec,1);
+		rec = CAN_read_rx_buffer(1);
+		return rec;
+		break;
+		
+		default:
+		printf("No mail found..\n");
+		return rec;
+		break;
+	}
+	printf("\n");
 }
 
 void CAN_print_message(CANMSG* msg){

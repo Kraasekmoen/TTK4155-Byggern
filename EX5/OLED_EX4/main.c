@@ -30,7 +30,6 @@
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
 
-
 //		--		INITIALIZATIVE CODE				--		//
 static int uart_putchar(char c, FILE *stream);
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
@@ -89,7 +88,7 @@ void MAIN_INITS(mcp_mode md){
 volatile uint8_t EXT_INT_FLAG = 0;
 ISR(INT1_vect){ 
 	EXT_INT_FLAG = 1; 
-	printf("\nExt. interrupt on INT1!\n");
+	printf("\nEXINT1!\n");
 }
 
 //		--		TEST AND DEMO CODE				--		 //
@@ -238,8 +237,35 @@ void Exercise_5_Demo(){
 }
 
 void current_muckery(){
-	char stmnt[] = "This is a proof of concept, %d\n";
-	printf(stmnt, 12);
+	
+	// Init a default message
+	CANMSG message;
+	message.ID_high = 0b1010;
+	message.ID_low = 0b1010;
+	message.data_length = 4;
+	for (uint8_t i = 0; i < message.data_length; i++){
+		message.data[i] = 42;
+	}
+			
+	printf("SCM: \n");
+	CAN_print_message(&message);
+		
+	// Send message
+	while (!CAN_transmit_message(&message)){
+		printf("SF\n");
+		for(int j=0; j<10; j++){ for(int k=0; k<30000; k++);}
+	}
+	
+	// Check CAN interrupt
+	if (EXT_INT_FLAG == 1) {
+		EXT_INT_FLAG=0;
+		printf("RF\n");
+		CANMSG rec = CAN_get_mail();
+		CAN_print_message(&rec);
+	}	
+	
+	//TODO: Find out why a transmission failure flag is always raised, even though the message is both sent and received
+	MCP_write_byte(MCP_CANINTF,0);	// Resets all interrupt flags. 
 }
 
 //		--		PROGRAM CODE					--		//
@@ -248,9 +274,9 @@ void current_muckery(){
 int main(void)
 {
 
-	MAIN_INITS(LOOPBACK);						// Initialize USART transmission drivers, MCU ports, external memory, interrupts and SPI
+	MAIN_INITS(NORMAL);						// Initialize USART transmission drivers, MCU ports, external memory, interrupts and SPI
 		
-	char programme = '5';						// What code would you like to run today, Sir?
+	char programme = 't';						// What code would you like to run today, Sir?
 	while (1)
 	{
 		for (int i = 0; i < 100; i++){	for (int j = 0; j<30000; j++){}	}
