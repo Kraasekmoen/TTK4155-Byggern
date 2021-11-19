@@ -106,10 +106,12 @@ void LED_toggle_demo(){
 void CAN_demo(){
 	CAN_MESSAGE msg;
 	
+	// For each mailbox, check for a receive. If one is found, print it, and send it in return
 	for (int n=0; n<3; n++){
 		printf("Checking mailbox %d\n\r",n);
 		if (!can_receive(&msg, n)){
 			can_print_message(&msg);
+			can_send(&msg,0);
 		}
 		else{
 			printf("No mail today...\n\r");
