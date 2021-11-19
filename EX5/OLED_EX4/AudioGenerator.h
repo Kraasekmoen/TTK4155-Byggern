@@ -11,21 +11,22 @@
 
 #include <avr/io.h>
 
-typedef enum {
-	A = 440;
-	B = 494;
-	C = 523;
-	D = 587;
-	E = 659;
-	F = 698;
-	G = 784;
-} tone ;
+const int TONE_A;
+const int TONE_B;
+const int TONE_C;
+const int TONE_D;
+const int TONE_E;
+const int TONE_F;
+const int TONE_G;
 
-void AG_init(int bpm);
-void AG_osc_init();
-void AG_timer_init();
+void AG_init();
 
 void AG_set_freq(int freq);
+void AG_enable_osc();
+void AG_disable_osc();
+void AG_sequencer_16();
 
+int OC1A_COMP_INT;
+//ISR(TIMER1_COMPA_vect);
 
 #endif /* AUDIOGENERATOR_H_ */

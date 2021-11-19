@@ -20,6 +20,7 @@
 #include <SPI.h>
 #include <mcp2515.h>
 #include <CAN_Driver.h>
+#include <AudioGenerator.h>
 
 
 #define OFFSET 0x1000
@@ -237,7 +238,7 @@ void Exercise_5_Demo(){
 }
 
 void current_muckery(){
-	
+		
 	// Init a default message
 	CANMSG message;
 	message.ID_high = 0b1010;
@@ -268,6 +269,25 @@ void current_muckery(){
 	MCP_write_byte(MCP_CANINTF,0);	// Resets all interrupt flags. 
 }
 
+void audio_test(int freq){
+	
+	AG_init();
+	printf("Init\n");
+	AG_set_freq(freq);
+	printf("Set 1\n");
+	for (int i = 0; i < 100; i++){	for (int j = 0; j<10000; j++){}	}
+	AG_set_freq(220);
+	printf("Set 2\n");
+	for (int i = 0; i < 100; i++){	for (int j = 0; j<10000; j++){}	}
+	AG_set_freq(110);
+	printf("Set 3\n");
+}
+
+void sequencer_test(){
+	
+	AG_sequencer_16();
+}
+
 //		--		PROGRAM CODE					--		//
 
 // Warning: Reported data memory usage above 83% (~850 bytes) will cause runtime crash - check your printfs!
@@ -276,13 +296,12 @@ int main(void)
 
 	MAIN_INITS(NORMAL);						// Initialize USART transmission drivers, MCU ports, external memory, interrupts and SPI
 		
-	char programme = 't';						// What code would you like to run today, Sir?
+	char programme = 's';						// What code would you like to run today, Sir?
 	while (1)
 	{
-		for (int i = 0; i < 100; i++){	for (int j = 0; j<30000; j++){}	}
 			
 		switch(programme){
-			case 's':
+			case 'r':
 				SRAM_test();
 				break;
 			case '3':
@@ -296,7 +315,15 @@ int main(void)
 				break;
 			case 't':
 				current_muckery();
+				break;
+			case 'm':
+				audio_test(440);
+				break;
+			case 's':
+				sequencer_test();
+				break;
 		}
+		//for (int i = 0; i < 100; i++){	for (int j = 0; j<30000; j++){}	}
 	}
 	
 }
