@@ -42,6 +42,9 @@ GOAL:	Configure Pin PD5 (OC1A) to act as a variable oscillator, capable of drivi
 		TCNT1H and TCNT1L: The two 8-bit registers that make up the 16-bit counter.
 		OCR1AH and OCR1AL: The registers with the value the counter is compared against. Write your value to these!
 		
+		// Force compare will NOT reset timer in CTC mode (p 129)
+		TCCR1A |= (1<<FOC1A);
+		
 		Interrupts:
 			TIFR:
 			TIMSK:
@@ -52,6 +55,7 @@ GOAL:	Configure Pin PD5 (OC1A) to act as a variable oscillator, capable of drivi
 #include <AudioGenerator.h>
 
 const int TONE_A = 440;
+const int TONE_As = 466;
 const int TONE_B = 494;
 const int TONE_C = 523;
 const int TONE_D = 587;
@@ -65,7 +69,6 @@ void AG_init(){
 
 	DDRD |= (1<<PD5);					// Enable output on osc pin
 	
-	//TCCR1A |= (1<<COM1A0);				// Set 'Toggle OC1A on Compare Match'
 	TCCR1B |= (1<<WGM12);				// Set mode to CTC and TOP source to OCR1A
 	TCCR1B |= (1<<CS11) | (1<<CS10);	// Set counter clock to clk_i/o / 64 = 76800Hz
 	
@@ -75,19 +78,39 @@ void AG_init(){
 
 }
 
+void AG_majorizer(int freq, int durtn){
+	int freqs[] = {freq, 1.25*freq, 1.5*freq};
+	AG_set_chord(freqs, 3, durtn);
+}
 
+void AG_octavizer(int freq, int durtn){
+	int freqs[] = {0.5*freq, freq, 2*freq};
+	AG_set_chord(freqs, 3, durtn);
+}
 
 void AG_set_freq(int freq){
-	printf("freq:%d\n", freq);
+	if (!(freq>0)){ printf("Invalid freq %d\n", freq); return;	}
+
+	// Stop counter
+	TCCR1B &= ~(1<<CS10 | 1<<CS11 | 1<<CS12);
+	// Reset counter
+	TCNT1L = 0;
+	TCNT1H = 0;	
+	
+	//printf("freq:%d\n", freq);
 	int trigger_step	= 76800/(2*freq);
-	printf("trg_stp:%d\n",trigger_step);
+	//printf("trg_stp:%d\n",trigger_step);
 	
 	uint8_t step_upper	= (uint8_t) (trigger_step >> 8);
 	uint8_t step_lower	= (uint8_t) (trigger_step & 0b0000000011111111);
-	printf("sp_up, sp_lw: %d %d\n", step_upper, step_lower);
+	//printf("sp_up, sp_lw: %d %d\n", step_upper, step_lower);
 	
 	OCR1AH	= step_upper;
 	OCR1AL	= step_lower;
+
+	// Start counter
+	TCCR1B |= (1<<CS11) | (1<<CS10);	// Set counter clock to clk_i/o / 64 = 76800Hz
+	
 }
 
 void AG_enable_osc(){
@@ -104,30 +127,195 @@ ISR(TIMER1_COMPA_vect){
 	printf("\nComp1A!\n");
 }
 
-void AG_sequencer_16(){
-	int notes[] = {440, 494, 523, 587, 659, 698, 784, 698, 659, 587, 523, 494, 440, 494, 523, 494};
-
-	AG_init();
-	int step = 0;
-	int step_switch = 0;
-	//TIMSK |= (1<<OCIE1A);
-	
-	for (uint8_t i = 0; i<16; i++){
-		AG_set_freq(notes[i]);
-		printf("Note: %d\n",notes[i]);
-		step_switch = notes[i];
-		
-		for (int j = 0; j<100; j++)	{ for (int k = 0; k<7000; k++){} }
-		/*
-		while(step<step_switch){
-			if (OC1A_COMP_INT == 1){				// Problem: Interrupts are waaay too frequent - system freezes. Consider changing clck
-				OC1A_COMP_INT = 0;
-				step++;
-			}
+void AG_set_chord(int *freqs, int num_tones, int durtn){
+	int v = 0;
+	for (int j=0; j<durtn; j++){
+		for (int k=0; k<num_tones; k++){
+			AG_set_freq(freqs[k]);
+			printf("Freq: %d\n",freqs[k]);
 		}
-		*/
 	}
-
-	//TIMSK &= ~(1<<OCIE1A);
 	AG_disable_osc();
 }
+
+void AG_sequencer_16(int *notes, int legato, int step_length, int majordize){
+
+	AG_init();
+	AG_disable_osc();
+	int note = 0;
+
+
+	if (majordize == 1)
+	{
+		for (uint8_t i = 0; i<16; i++){
+			note = notes[i];
+			if (note==0){
+				AG_disable_osc();
+			}
+			else{
+				AG_enable_osc();
+				AG_majorizer(note,step_length/300);
+			}
+		}
+	} 
+	else
+	{
+		
+		if (legato >= 1){
+			for (uint8_t i = 0; i<16; i++){
+				note = notes[i];
+				if (note==0){
+					AG_disable_osc();
+				}
+				else{
+					AG_set_freq(note);
+					AG_enable_osc();
+				}
+				printf("Note: %d\n",notes[i]);
+				
+				for (int j = 0; j<100; j++)	{ for (int k = 0; k<step_length; k++){} }
+			}
+		}
+		else{
+			for (uint8_t i = 0; i<16; i++){
+				note = notes[i];
+				if (note==0){
+					AG_disable_osc();
+				}
+				else{
+					AG_set_freq(note);
+					AG_enable_osc();
+				}
+				printf("Note: %d\n",notes[i]);
+				
+				for (int j = 0; j<100; j++)	{ for (int k = 0; k<(step_length/2); k++){} }
+				AG_disable_osc();
+				for (int j = 0; j<100; j++)	{ for (int k = 0; k<(step_length/2); k++){} }
+			}
+		}
+		
+	}
+
+	
+	
+	AG_disable_osc();
+}
+
+void AG_adv_sequencer_16(int *notes, int *legato, int *majordize, int step_length){
+
+	AG_init();
+	//AG_disable_osc();
+	
+	int note = 0;
+	int chord = 0;
+	int leg = 0;
+
+	for (uint8_t i = 0; i<16; i++){
+			note = notes[i];
+			chord = majordize[i];
+			leg = legato[i];
+			
+			
+			// Legato on
+			if (leg >= 1){
+				// Majordize on
+				if (chord >= 1){
+					
+					if (note==0){
+						AG_disable_osc();
+					}
+					else{
+						AG_enable_osc();
+						AG_octavizer(note,step_length/300);
+					}					
+				}
+				else{	// Majordize off
+					
+					if (note==0){
+						AG_disable_osc();
+					}
+					else{
+						AG_set_freq(note);
+						AG_enable_osc();
+					}
+					for (int j = 0; j<100; j++)	{ for (int k = 0; k<step_length; k++){} }
+
+					
+				}
+			}
+			//Legato off
+			else{
+				// Majordize on
+				if (chord >= 1){
+					
+					if (note==0){
+						AG_disable_osc();
+					}
+					else{
+						AG_enable_osc();
+						AG_octavizer(note,step_length/300);
+					}
+				}
+				else{	// Majordize off
+					
+					if (note==0){
+						AG_disable_osc();
+					}
+					else{
+						AG_set_freq(note);
+						AG_enable_osc();
+					}
+					for (int j = 0; j<100; j++)	{ for (int k = 0; k<(step_length/2); k++){} }
+					AG_disable_osc();
+					for (int j = 0; j<100; j++)	{ for (int k = 0; k<(step_length/2); k++){} }
+					
+				}
+				
+				
+			}
+		}
+	
+	//AG_disable_osc();
+}
+
+/*
+void AG_adv_sequencer_16(int *notes, int *majordize, int step_length){
+
+	AG_init();
+	AG_disable_osc();
+	
+	int note = 0;
+	int chord = 0;
+	int leg = 0;
+
+	for (uint8_t i = 0; i<16; i++){
+		note = notes[i];
+		chord = majordize[i];		
+
+		// Majordize on
+		if (chord >= 1){
+			
+			if (note==0){
+				AG_disable_osc();
+			}
+			else{
+				AG_enable_osc();
+				AG_majordizer(note,step_length/300);
+			}
+		}
+		else{	// Majordize off
+			
+			if (note==0){
+				AG_disable_osc();
+			}
+			else{
+				AG_set_freq(note);
+				AG_enable_osc();
+			}
+			for (int j = 0; j<100; j++)	{ for (int k = 0; k<step_length; k++){} }
+		}
+	}
+	
+	AG_disable_osc();
+}
+*/

@@ -167,18 +167,18 @@ void oled_screen_normal(){
 }
 
 	
-	void oled_print_arrow(){
-		oled_gddram_write(0b00011000);
-		oled_gddram_write(0b00011000);
-		oled_gddram_write(0b01111110);
-		oled_gddram_write(0b00111100);
-		oled_gddram_write(0b00011000);
-	}
+void oled_print_arrow(){
+	oled_gddram_write(0b00011000);
+	oled_gddram_write(0b00011000);
+	oled_gddram_write(0b01111110);
+	oled_gddram_write(0b00111100);
+	oled_gddram_write(0b00011000);
+}
 		
 	
-	void testPrint_font(uint8_t ch){
-		for(int i=0; i < sizeof(font8[ch]); i++){
-			printf("Element of index %d = %d:\n", i, pgm_read_word(&font8[ch][i]));
-		}
+void testPrint_font(uint8_t ch){
+	for(int i=0; i < sizeof(font8[ch]); i++){
+		printf("Element of index %d = %d:\n", i, pgm_read_word(&font8[ch][i]));
 	}
+}
 	

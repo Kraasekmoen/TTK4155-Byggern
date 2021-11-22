@@ -17,7 +17,7 @@ main.d main.o: .././main.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdlib.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h \
  ../OLED_Driver.h ../USART_Driver.h ../ADC_Driver.h ../SPI.h ../mcp2515.h \
- ../CAN_Driver.h
+ ../CAN_Driver.h ../AudioGenerator.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
 
@@ -64,3 +64,5 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../mcp2515.h:
 
 ../CAN_Driver.h:
+
+../AudioGenerator.h:

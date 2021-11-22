@@ -33,6 +33,7 @@ int CAN_transmit_message(CANMSG* msg){
 			break;
 		}
 		if (CAN_check_tx_buffer_pending(i) && i > 1){
+			printf("No vacant TXBF\n");
 			return 0;
 		}
 	}
@@ -83,13 +84,20 @@ int CAN_transmit_message(CANMSG* msg){
 	}
 
 	MCP_bit_modify(MCP_CANINTF,0b00011100, 0);		// Clear 'TX buffer empty' flags
+	MCP_bit_modify(MCP_CANCTRL, 0b00010000,0);		// Clear ABAT bit (p 16)
+	uint8_t txb0ctrl = MCP_read_byte(MCP_TXB0CTRL + buffer_num*0x10);
+	printf("CTRL: %d\n",txb0ctrl);
+	uint8_t tx_err = txb0ctrl &= 0b00010000;
+	if (tx_err == 0b00010000){
+		return 0;
+	}
 	return 1;
 }
 
 CANMSG CAN_read_rx_buffer(uint8_t rx_buf){
 	CANMSG rec;
 	rec.data_length = 9;
-	if (rx_buf != 0 && rx_buf != 1) { printf("CAN Error: Requested read from buffer that doesn't exist; %d \n", rx_buf); return rec; }
+	if (rx_buf != 0 && rx_buf != 1) { printf("Invalid bffr read; %d \n", rx_buf); return rec; }
 
 	rec.ID_high = MCP_read_byte(MCP_RXB0SIDH + 0x10*rx_buf);
 	rec.ID_low = MCP_read_byte(MCP_RXB0SIDL + 0x10*rx_buf);
@@ -107,8 +115,8 @@ CANMSG CAN_get_mail(){
 	printf("CANINTF: 0x%02X\n", INTFs);
 	uint8_t RXnFs = INTFs &= 0b00000011;
 	CANMSG rec;
-	char msg_rec[] = "Mail found in RX%d!\n";
-	char msg_err[] = "CAN read failure RX%d!\n";		// Data length defaults to 9 when read is unsuccessful
+	char msg_rec[] = "Mail in RX%d!\n";
+	char msg_err[] = "CAN read fail RX%d!\n";		// Data length defaults to 9 when read is unsuccessful
 	if (rec.data_length == 9){
 		printf(msg_err,3);
 		return rec;
@@ -146,4 +154,47 @@ void CAN_print_message(CANMSG* msg){
 	}
 	
 	printf("\n");
+}
+
+volatile uint8_t EXT_INT_FLAG = 0;
+ISR(INT1_vect){
+	EXT_INT_FLAG = 1;
+	printf("\nEXINT1!\n");
+}
+
+void Exercise_6_Demo(){
+	// Init a default message
+	CANMSG message;
+	message.ID_high = 0b1010;
+	message.ID_low = 0b1010;
+	message.data_length = 4;
+	for (uint8_t i = 0; i < message.data_length; i++){
+		message.data[i] = 42;
+	}
+	
+	printf("SCM:\n");
+	CAN_print_message(&message);
+	
+	// Send message
+	while (!CAN_transmit_message(&message)){
+		printf("SF\n");
+		for(int j=0; j<10; j++){ for(int k=0; k<30000; k++);}
+	}
+	
+	/*
+	printf("STAT:%d ", MCP_read_byte(MCP_CANSTAT));
+	printf("INTF:%d ", MCP_read_byte(MCP_CANINTF));
+	printf("CTRL:%d\n", MCP_read_byte(MCP_TXB0CTRL));
+	*/
+	
+	// Check CAN interrupt
+	if (EXT_INT_FLAG == 1) {
+		EXT_INT_FLAG=0;
+		printf("RF\n");
+		CANMSG rec = CAN_get_mail();
+		CAN_print_message(&rec);
+	}
+	
+	//TODO: Find out why a transmission failure flag is always raised, even though the message is both sent and received
+	MCP_write_byte(MCP_CANINTF,0);	// Resets all interrupt flags.
 }

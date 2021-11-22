@@ -45,14 +45,14 @@ uint8_t array_average(uint8_t *array, uint8_t size){		//
 	uint8_t avg;
 	sum = avg = 0;
 	
-	printf("Computing average of array of size %d \n", size);
+	printf("Avg, array-size %d\n", size);
 	
 	for(loop = 0; loop < size; loop++) {
 		sum = sum + array[loop];
 	}
 	
 	avg = sum / size;
-	printf("Total sum was %d. Computed averaged returned is %d. \n\n", sum, avg);
+	printf("Sum %d. Average %d. \n\n", sum, avg);
 	return avg;
 }
 
@@ -64,8 +64,8 @@ uint8_t * adc_joystick_autocalibrate(uint8_t samples){		// Takes a number of sam
 	
 	for(int i=0; i<samples; i++){
 		sampled_value = adc_read();
-		printf("Sample from Joy1 = %d \n", sampled_value[0]);
-		printf("Sample from Joy2 = %d \n", sampled_value[1]);
+		printf("Joy1 sample %d \n", sampled_value[0]);
+		printf("Joy2 sample %d \n", sampled_value[1]);
 		joy1_samples[i] = sampled_value[0];
 		joy2_samples[i] = sampled_value[1];
 		
@@ -86,17 +86,33 @@ uint8_t * adc_joystick_autocalibrate(uint8_t samples){		// Takes a number of sam
 
 void ADC_test_1(uint8_t *joy_origins){
 	uint8_t *sampled_value;
+	char str[] = "Sampled value ch";
 	
 	sampled_value = adc_read();
-	printf("Sampled value channel 0 (Joy1) = %d \n", adc_formatter(sampled_value[0], joy_origins[0]));
-	printf("Sampled value channel 1 (Joy2) = %d \n", adc_formatter(sampled_value[1], joy_origins[1]));
-	printf("Sampled value channel 2 (SliL) = %d \n", (sampled_value[2]));
-	printf("Sampled value channel 3 (SliR) = %d \n", (sampled_value[3]));
+	printf("%s (Joy1) = %d \n", str, adc_formatter(sampled_value[0], joy_origins[0]));
+	printf("%s 1 (Joy2) = %d \n",str, adc_formatter(sampled_value[1], joy_origins[1]));
+	printf("%s 2 (SliL) = %d \n",str, (sampled_value[2]));
+	printf("%s ch 3 (SliR) = %d \n",str, (sampled_value[3]));
+	
+	// Delay
+	for(int j=0; j<100; j++)
+	{
+		for(int k=0; k<10000; k++);
+	}
+}
+
+void ADC_test_2(uint8_t *joy_origins){
+	uint8_t *sampled_value;
+	
+	sampled_value = adc_read();
+	printf("\rJoy1: %d ", adc_formatter(sampled_value[0], joy_origins[0]));
+	printf("Joy2: %d | ", adc_formatter(sampled_value[1], joy_origins[1]));
+	printf("SliL: %d ", (sampled_value[2]));
+	printf("SliR: %d\n", (sampled_value[3]));
 	
 	// Delay
 	for(int j=0; j<10; j++)
 	{
-		for(int k=0; k<30000; k++);
+		for(int k=0; k<3000; k++);
 	}
-	printf("Restart from the first channel \n");
 }

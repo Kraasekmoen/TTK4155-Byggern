@@ -86,12 +86,13 @@ void MAIN_INITS(mcp_mode md){
 }
 
 //		--		Interrupt handler				--		//
-volatile uint8_t EXT_INT_FLAG = 0;
+
+/*volatile uint8_t EXT_INT_FLAG = 0;
 ISR(INT1_vect){ 
 	EXT_INT_FLAG = 1; 
 	printf("\nEXINT1!\n");
 }
-
+*/
 //		--		TEST AND DEMO CODE				--		 //
 void SRAM_test(void)
 {
@@ -136,10 +137,10 @@ void Exercise_3_Demo(){
 	printf(statement, 1, joy_origins[0]);
 	printf(statement, 2, joy_origins[1]);
 
-	for (uint8_t i = 0; i<10; i++)
+	for (uint8_t i = 0; i<500; i++)
 	{
 		// Read each channel on ADC in sequence (hard-wired mode)
-		ADC_test_1(joy_origins);
+		ADC_test_2(joy_origins);
 		
 	}
 }
@@ -152,18 +153,18 @@ void Exercise_4_Demo(){
 	printf("Attempting to clear OLED screen...\n");
 	oled_cmdreg_write(0xa5);
 	
-	oled_reset();
+	//oled_reset();
 	// Delay
-	for(int j=0; j<10; j++)
+	for(int j=0; j<100; j++)
 	{
-		for(int k=0; k<30000; k++);
+		for(int k=0; k<10000; k++);
 	}
 	oled_invert_screen();
-	/*
+	
 	for(int j=0; j<10; j++){
 		testPrint_font(j);
 	}
-	*/
+	oled_print_arrow();
 }
 
 void Exercise_5_Demo(){
@@ -178,11 +179,11 @@ void Exercise_5_Demo(){
 	for (uint8_t i = 0; i < message.data_length; i++){
 		message.data[i] = i+4;
 	}
-	printf("Sending message over CAN: \n");
+	printf("CAN send: \n");
 	CAN_print_message(&message);
 	
 	while (!CAN_transmit_message(&message)){
-		printf("Failure\n");
+		printf("E_SF\n");
 		for(int j=0; j<10; j++)
 		{
 			for(int k=0; k<30000; k++);
@@ -203,8 +204,8 @@ void Exercise_5_Demo(){
 	printf("CANINTF: 0x%02X\n", INTFs);
 	uint8_t RXnFs = INTFs &= 0b00000011;
 	CANMSG rec;
-	char msg_rec[] = "Message flag received for RX%d!\n";
-	char msg_err[] = "Msg data length 9 - invalid message RX%d!\n";		// Data length defaults to 9 when read is unsuccessful
+	char msg_rec[] = "Msg flag received for RX%d!\n";
+	char msg_err[] = "Msg data length 9, RX%d!\n";		// Data length defaults to 9 when read is unsuccessful
 	switch (RXnFs)
 	{
 		case 0b00000001:
@@ -230,7 +231,7 @@ void Exercise_5_Demo(){
 			break;
 		
 		default:
-			printf("No message flags..\n");
+			printf("No msg flags\n");
 			break;
 	}
 	printf("\n");
@@ -238,54 +239,45 @@ void Exercise_5_Demo(){
 }
 
 void current_muckery(){
-		
-	// Init a default message
-	CANMSG message;
-	message.ID_high = 0b1010;
-	message.ID_low = 0b1010;
-	message.data_length = 4;
-	for (uint8_t i = 0; i < message.data_length; i++){
-		message.data[i] = 42;
-	}
-			
-	printf("SCM: \n");
-	CAN_print_message(&message);
-		
-	// Send message
-	while (!CAN_transmit_message(&message)){
-		printf("SF\n");
-		for(int j=0; j<10; j++){ for(int k=0; k<30000; k++);}
-	}
+	printf("Sod off\n");	
 	
-	// Check CAN interrupt
-	if (EXT_INT_FLAG == 1) {
-		EXT_INT_FLAG=0;
-		printf("RF\n");
-		CANMSG rec = CAN_get_mail();
-		CAN_print_message(&rec);
-	}	
-	
-	//TODO: Find out why a transmission failure flag is always raised, even though the message is both sent and received
-	MCP_write_byte(MCP_CANINTF,0);	// Resets all interrupt flags. 
 }
 
 void audio_test(int freq){
-	
 	AG_init();
-	printf("Init\n");
-	AG_set_freq(freq);
-	printf("Set 1\n");
-	for (int i = 0; i < 100; i++){	for (int j = 0; j<10000; j++){}	}
-	AG_set_freq(220);
-	printf("Set 2\n");
-	for (int i = 0; i < 100; i++){	for (int j = 0; j<10000; j++){}	}
-	AG_set_freq(110);
-	printf("Set 3\n");
+	
+	AG_majorizer(TONE_A, 10);
+	AG_majorizer(TONE_C, 10);
+	AG_majorizer(TONE_F, 10);
+	
+	AG_disable_osc();
+	for (int i = 0; i < 100; i++){	for (int j = 0; j<3000; j++){}	}
+	AG_enable_osc();
+
 }
 
 void sequencer_test(){
+	int notes[]		= {TONE_C, TONE_B, TONE_A, TONE_B, TONE_C, TONE_B, TONE_A, TONE_B, TONE_C, TONE_D, TONE_E, TONE_F, TONE_G, TONE_F, TONE_E, TONE_D};
 	
-	AG_sequencer_16();
+	int legato[]		= {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1};
+	int chord[]			= {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	
+	//AG_sequencer_16(notes, 1, 1500, 0);
+	AG_adv_sequencer_16(notes, legato, chord, 1500);
+	
+}
+
+void sequencer_test2(){
+	int notes[]		= {TONE_C, TONE_C, TONE_C, TONE_C, TONE_As, TONE_As, TONE_As, TONE_As, 0.5*TONE_F, 0.5*TONE_F, 0.5*TONE_F, 0.5*TONE_F, 0.5*TONE_G, 0.5*TONE_G, 0.5*TONE_G, 0.5*TONE_G};
+	int notes2[]	= {TONE_C, TONE_C, TONE_C, TONE_C, TONE_As, TONE_As, TONE_As, TONE_As, 0.5*TONE_G, 0.5*TONE_G, 0.5*TONE_G, 0.5*TONE_G, 0.5*TONE_F, 0.5*TONE_F, 0.5*TONE_F, 0.5*TONE_F};
+	
+	int legato[]		= {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+	int chord[]			= {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+	
+	//AG_sequencer_16(notes, 1, 1500, 0);
+	AG_adv_sequencer_16(notes, legato, chord, 1500);
+	AG_adv_sequencer_16(notes2, legato, chord, 1500);
+	
 }
 
 //		--		PROGRAM CODE					--		//
@@ -295,8 +287,26 @@ int main(void)
 {
 
 	MAIN_INITS(NORMAL);						// Initialize USART transmission drivers, MCU ports, external memory, interrupts and SPI
+	
+	/*
+	int notes[]		= {TONE_C, TONE_B, TONE_A, TONE_B, TONE_C, TONE_B, TONE_A, TONE_B, TONE_C, TONE_D, TONE_E, TONE_F, TONE_G, TONE_F, TONE_E, TONE_D};
+	int legato[]	= {1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+	int chord[]		= {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	*/
+	
+	int notes1[]	= {0.5*TONE_C, TONE_C, 0.5*TONE_C, TONE_C, 0.5*TONE_C, TONE_C, 0.5*TONE_C, 0.5*TONE_C, 0.5*TONE_As, TONE_As, 0.5*TONE_As, TONE_As, 0.5*TONE_As, TONE_As, 0.5*TONE_As, 0.5*TONE_As};
+	int notes2[]	= {0.25*TONE_G, 0.5*TONE_G, 0.25*TONE_G, 0.5*TONE_G, 0.25*TONE_G, 0.5*TONE_G, 0.5*TONE_G, 0.5*TONE_G, 0.25*TONE_F, 0.5*TONE_F, 0.25*TONE_F, 0.5*TONE_F, 0.25*TONE_F, 0.5*TONE_F, 0.5*TONE_G, TONE_As};
+	int legato[]	= {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+	int chord[]		= {0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1};
 		
-	char programme = 's';						// What code would you like to run today, Sir?
+	
+	for( int i = 0; i<16; i++){
+		notes1[i] = notes1[i]*2;
+		notes2[i] = notes2[i]*2;
+	}
+	
+		
+	char programme = 'r';						// What code would you like to run today, Sir?
 	while (1)
 	{
 			
@@ -308,19 +318,48 @@ int main(void)
 				Exercise_3_Demo();
 				break;
 			case '4':
+			/*
+				oled_init();
+				
+				for (int j = 0; j<8; j++)
+				{
+					oled_goto_page(j);
+					for (int i = 0; 0<25; i++)
+					{
+						oled_print_arrow();
+					}
+				}
+				for(int j=0; j<100; j++)
+				{
+					for(int k=0; k<10000; k++);
+				}
+				*/
 				Exercise_4_Demo();
+				
 				break;
 			case '5':
 				Exercise_5_Demo();
+				//for (int i = 0; i < 10; i++){	for (int j = 0; j<30000; j++){}	}
+				break;
+			case '6':
+				Exercise_6_Demo();
+				for (int i = 0; i < 10; i++){	for (int j = 0; j<10000; j++){}	}
 				break;
 			case 't':
 				current_muckery();
 				break;
 			case 'm':
-				audio_test(440);
+				sequencer_test();
 				break;
 			case 's':
-				sequencer_test();
+				//AG_adv_sequencer_16(notes, legato, chord, 1500);
+				
+				chord[15]=1;
+				chord[14]=1;
+				AG_adv_sequencer_16(notes1, legato, chord, 1500);
+				chord[15]=0;
+				chord[14]=0;
+				AG_adv_sequencer_16(notes2, legato, chord, 1500);
 				break;
 		}
 		//for (int i = 0; i < 100; i++){	for (int j = 0; j<30000; j++){}	}

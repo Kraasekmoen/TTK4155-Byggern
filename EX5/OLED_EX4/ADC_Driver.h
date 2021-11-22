@@ -25,6 +25,7 @@
 	uint8_t * adc_joystick_autocalibrate(uint8_t samples);		// Takes a number of samples from both joysticks and returns pointer to array of averages
 
 	void ADC_test_1(uint8_t *joy_origins);
+	void ADC_test_2(uint8_t *joy_origins);
 
 
 #endif /* ADC_DRIVER_H_ */

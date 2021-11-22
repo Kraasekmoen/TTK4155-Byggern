@@ -35,5 +35,10 @@ CANMSG CAN_read_rx_buffer(uint8_t rx_buf);
 CANMSG CAN_get_mail();
 void CAN_print_message(CANMSG* msg);
 
+void Exercise_6_Demo();
+
+volatile uint8_t EXT_INT_FLAG;
+ISR(INT1_vect);
+
 
 #endif /* CAN_DRIVER_H_ */
