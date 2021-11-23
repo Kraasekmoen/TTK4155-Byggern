@@ -127,7 +127,8 @@ int main(void)
 
 	LED_init();
 	configure_uart();								// UART printf init
-	can_init_def_tx_rx_mb(0x293112);				// SMP:0 BRP:41 SJW:3 PROPAG:1 PHS1:1 PHS2:2
+	//can_init_def_tx_rx_mb(0x293112);				// SMP:0 BRP:41 SJW:3 PROPAG:1 PHS1:1 PHS2:2
+	can_init_def_tx_rx_mb(0x1143112);				// SMP:1 BRP:20 SJW:3 PROPAG:1 PHS1:1 PHS2:2
 
     while (1) 
     {
